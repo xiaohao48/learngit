@@ -26,11 +26,17 @@
 <<<<<<< HEAD
 =======
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
       <change afterPath="$PROJECT_DIR$/game_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/alien_invasion.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/alien_invasion.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
 >>>>>>> c8900374a45bce89b563245211ed65c978e41ba7
+<<<<<<< HEAD
+>>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
+=======
 >>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
