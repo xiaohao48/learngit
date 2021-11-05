@@ -17,14 +17,11 @@ def run_game():
 
     bullets = Group()
 
-
     while True:
-        gf.check_events(ship,ai_settings,bullets,screen)
+        gf.check_events(ship, ai_settings, bullets, screen)
         ship.update()
         bullets.update()
-        gf.update_screen(ai_settings, screen, ship,bullets)
-
-
+        gf.update_screen(ai_settings, screen, ship, bullets)
 
 
 run_game()
