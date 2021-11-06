@@ -25,13 +25,20 @@
     <list default="true" id="9ddc7d09-fe31-48be-95f6-f4df2c13d12f" name="Changes" comment="">
 <<<<<<< HEAD
 =======
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
       <change afterPath="$PROJECT_DIR$/game_functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/alien_invasion.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/alien_invasion.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
 >>>>>>> c8900374a45bce89b563245211ed65c978e41ba7
+<<<<<<< HEAD
+>>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
+=======
+>>>>>>> 89e7b9df2a09dbd1ed2cb106cd283d69555daab6
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/alian_invasion.py" beforeDir="false" afterPath="$PROJECT_DIR$/alian_invasion.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ship.py" beforeDir="false" afterPath="$PROJECT_DIR$/ship.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -131,22 +138,22 @@
     <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1898" height="277" key="GridCell.Tab.0.bottom" timestamp="1635779522652">
+    <state width="1898" height="277" key="GridCell.Tab.0.bottom" timestamp="1636044700189">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="277" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1635779522652" />
-    <state width="1898" height="277" key="GridCell.Tab.0.center" timestamp="1635779522652">
+    <state width="1898" height="277" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1636044700189" />
+    <state width="1898" height="277" key="GridCell.Tab.0.center" timestamp="1636044700188">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="277" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1635779522652" />
-    <state width="1898" height="277" key="GridCell.Tab.0.left" timestamp="1635779522652">
+    <state width="1898" height="277" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1636044700188" />
+    <state width="1898" height="277" key="GridCell.Tab.0.left" timestamp="1636044700188">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="277" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1635779522652" />
-    <state width="1898" height="277" key="GridCell.Tab.0.right" timestamp="1635779522652">
+    <state width="1898" height="277" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1636044700188" />
+    <state width="1898" height="277" key="GridCell.Tab.0.right" timestamp="1636044700189">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="277" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1635779522652" />
+    <state width="1898" height="277" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1636044700189" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
