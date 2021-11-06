@@ -9,7 +9,7 @@ def check_events(ship, ai_settings, bullets, screen):
         if event.type == pygame.QUIT:
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ship, ai_settings, screen, bullets)
+            check_keydown_events(event, ship, bullets, ai_settings, screen)
 
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, ship)
