@@ -11,7 +11,12 @@ class Settings():
 
         # 子弹属性
         self.bullet_speed_factor = 1
-        self.bullet_width = 3
+        self.bullet_width = 500
         self.bullet_height = 15
         self.bullet_color = (255, 0, 0)
         self.bullet_allowed = 3
+
+        # 外星人属性
+        self.alien_speed_factor = 0.4
+        self.fleet_drop_speed = 50
+        self.fleet_direction = 1
