@@ -20,7 +20,7 @@ class Ship():
         self.moving_down = False
 
         self.center = float(self.rect.centerx)
-        self.y = float(self.screen_rect.bottom)-self.rect.height
+        self.y = float(self.screen_rect.bottom) - self.rect.height
 
     def update(self):
         if self.moving_right and self.rect.right < self.screen_rect.right:
@@ -37,3 +37,7 @@ class Ship():
 
     def biltme(self):
         self.screen.blit(self.images, self.rect)
+
+    def center_ship(self):
+        self.center = self.screen_rect.centerx
+        self.y = float(self.screen_rect.bottom) - self.rect.height
