@@ -6,10 +6,13 @@ from alien import Alien
 from time import sleep
 
 
-def check_events(ship, ai_settings, bullets, screen):
+def check_events(ship, ai_settings, bullets, screen, play_button, stats, aliens):
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            check_play_button(play_button, mouse_x, mouse_y, stats, aliens, bullets, ship, ai_settings, screen)
         elif event.type == pygame.KEYDOWN:
             check_keydown_events(event, ship, bullets, ai_settings, screen)
 
@@ -45,13 +48,25 @@ def check_keyup_events(event, ship):
         ship.moving_down = False
 
 
-def update_screen(ai_settings, screen, ship, bullets, aliens):
+def check_play_button(play_button, mouse_x, mouse_y, stats, aliens, bullets, ship, ai_settings, screen):
+    button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
+    if button_clicked and not stats.game_active:
+        stats.reset_stats()
+        stats.game_active = True
+        rest_aliens(aliens, bullets, ship, ai_settings, screen)
+        pygame.mouse.set_visible(False)
+
+
+def update_screen(ai_settings, screen, ship, bullets, aliens, stats, play_button):
     screen.fill(ai_settings.bg_color)
 
     for bullet in bullets.sprites():
         bullet.draw_bullet()
     ship.biltme()
     aliens.draw(screen)
+
+    if not stats.game_active:
+        play_button.draw_button()
     pygame.display.flip()
 
 
@@ -136,13 +151,18 @@ def change_fleet_direction(ai_settings, aliens):
 def ship_hit(ai_settings, stats, aliens, bullets, screen, ship):
     if stats.ships_left > 0:
         stats.ships_left -= 1
-        aliens.empty()
-        bullets.empty()
-        create_fleet(ai_settings, screen, aliens, ship)
-        ship.center_ship()
+        rest_aliens(aliens, bullets, ship, ai_settings, screen)
         sleep(0.5)
     else:
         stats.game_active = False
+        pygame.mouse.set_visible(True)
+
+
+def rest_aliens(aliens, bullets, ship, ai_settings, screen):
+    aliens.empty()
+    bullets.empty()
+    create_fleet(ai_settings, screen, aliens, ship)
+    ship.center_ship()
 
 
 def check_alien_bottom(screen, aliens, ai_settings, stats, bullets, ship):
