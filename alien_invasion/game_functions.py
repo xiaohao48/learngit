@@ -52,6 +52,7 @@ def check_play_button(play_button, mouse_x, mouse_y, stats, aliens, bullets, shi
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and not stats.game_active:
         stats.reset_stats()
+        sb.prep_score()
         ai_settings.initialize_dynamic_settings()
         stats.game_active = True
         rest_aliens(aliens, bullets, ship, ai_settings, screen)
