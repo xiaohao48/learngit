@@ -56,6 +56,7 @@ def check_play_button(play_button, mouse_x, mouse_y, stats, aliens, bullets, shi
         sb.prep_score()
         sb.prep_high_score()
         sb.prep_level()
+        sb.prep_ships()
         ai_settings.initialize_dynamic_settings()
 
         rest_aliens(aliens, bullets, ship, ai_settings, screen)
@@ -122,7 +123,7 @@ def create_alien(ai_settings, screen, aliens, alien_number, row_number):
     alien.x = alien_width + 2 * alien_width * alien_number
     alien.rect.x = alien.x
     alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
-    alien.add(aliens)
+    aliens.add(alien)
 
 
 def create_fleet(ai_settings, screen, aliens, ship):
@@ -164,6 +165,7 @@ def change_fleet_direction(ai_settings, aliens):
 def ship_hit(ai_settings, stats, aliens, bullets, screen, ship, sb):
     if stats.ships_left > 0:
         stats.ships_left -= 1
+        sb.prep_ships()
         rest_aliens(aliens, bullets, ship, ai_settings, screen)
         sleep(0.5)
     else:
