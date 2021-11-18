@@ -14,13 +14,13 @@ def check_events(ship, ai_settings, bullets, screen, play_button, stats, aliens,
             mouse_x, mouse_y = pygame.mouse.get_pos()
             check_play_button(play_button, mouse_x, mouse_y, stats, aliens, bullets, ship, ai_settings, screen, sb)
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ship, bullets, ai_settings, screen)
+            check_keydown_events(event, ship, bullets, ai_settings, screen, stats)
 
         elif event.type == pygame.KEYUP:
             check_keyup_events(event, ship)
 
 
-def check_keydown_events(event, ship, bullets, ai_settings, screen):
+def check_keydown_events(event, ship, bullets, ai_settings, screen, stats):
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
     if event.key == pygame.K_LEFT:
@@ -31,7 +31,7 @@ def check_keydown_events(event, ship, bullets, ai_settings, screen):
         ship.moving_down = True
 
     if event.key == pygame.K_SPACE:
-        fire_bullet(ai_settings, screen, ship, bullets)
+        fire_bullet(ai_settings, screen, ship, bullets, stats)
 
     if event.key == pygame.K_q:
         sys.exit()
@@ -99,8 +99,8 @@ def check_bullet_alien_collisions(ai_settings, screen, aliens, ship, bullets, st
         create_fleet(ai_settings, screen, aliens, ship)
 
 
-def fire_bullet(ai_settings, screen, ship, bullets):
-    if len(bullets) < ai_settings.bullet_allowed:
+def fire_bullet(ai_settings, screen, ship, bullets, stats):
+    if stats.game_active and len(bullets) < ai_settings.bullet_allowed:
         new_bullet = Bullet(ai_settings, screen, ship)
         bullets.add(new_bullet)
 
@@ -163,12 +163,14 @@ def change_fleet_direction(ai_settings, aliens):
 
 
 def ship_hit(ai_settings, stats, aliens, bullets, screen, ship, sb):
-    if stats.ships_left > 0:
+    if stats.ships_left > 1:
         stats.ships_left -= 1
         sb.prep_ships()
         rest_aliens(aliens, bullets, ship, ai_settings, screen)
         sleep(0.5)
     else:
+        stats.ships_left -= 1
+        sb.prep_ships()
         stats.game_active = False
         pygame.mouse.set_visible(True)
         check_high_score(stats, sb)
