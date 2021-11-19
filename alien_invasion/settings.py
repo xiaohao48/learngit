@@ -7,24 +7,24 @@ class Settings():
         self.bg_color = (230, 230, 230)
 
         # 飞船属性
-        self.ship_limit = 1
+        self.ship_limit = 3
 
         # 子弹属性
         self.speedup_scale = 1.1
         self.score_scale = 1.5
-        self.bullet_width = 1000
+        self.bullet_width = 3
         self.bullet_height = 15
         self.bullet_color = (255, 0, 0)
-        self.bullet_allowed = 3
-        self.bullet_speed_factor = 0.5
+        self.bullet_allowed = 30
+        #self.bullet_speed_factor = 10
         # 外星人属性
-        self.fleet_drop_speed = 100
+        self.fleet_drop_speed = 10
 
         self.alien_points = 50
 
     def initialize_dynamic_settings(self):
         self.ship_speed_factor = 1.5
-        self.bullet_speed_factor = 0.5
+        self.bullet_speed_factor = 3
         self.alien_speed_factor = 0.3
 
         self.fleet_direction = 1
