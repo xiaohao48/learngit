@@ -37,7 +37,7 @@ class Ship(Sprite):
         self.rect.centerx = self.center
         self.rect.y = self.y
 
-    def biltme(self):
+    def blitme(self):
         self.screen.blit(self.image, self.rect)
 
     def center_ship(self):

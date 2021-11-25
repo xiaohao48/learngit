@@ -68,7 +68,8 @@ def update_screen(ai_settings, screen, ship, bullets, aliens, stats, play_button
     sb.show_score()
     for bullet in bullets.sprites():
         bullet.draw_bullet()
-    ship.biltme()
+    ship.blitme()
+
     aliens.draw(screen)
 
     if not stats.game_active:
