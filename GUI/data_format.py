@@ -1,5 +1,4 @@
 from tkinter import *
-from tkinter import filedialog
 import pyperclip
 
 
@@ -35,12 +34,8 @@ class Application(Frame):
         self.checkButton.grid(row=row, column=column)
         return self.checkButtonVar
 
-    def copy(self):
-        with open(r'out_data.txt', 'r') as f:
-            out_text = f.read()
-        return pyperclip.copy(out_text)
-
     def createWidget(self):
+        """创建组件"""
         # label
         self.createLabel("待处理数据", 0, 0)
         self.createLabel('前面添加', 2, 11)
@@ -55,7 +50,6 @@ class Application(Frame):
 
         # button
         self.createButton("确定", self.confirm, 1, 11)
-        self.createButton('另存为', self.newFile, 15, 11)
         self.createButton("复制", self.copy, 16, 11)
 
         # entry
@@ -70,74 +64,14 @@ class Application(Frame):
         self.del_newline = self.createCheckButton(1, '删除换行', 13, 11)
         self.del_em_value = self.createCheckButton(1, '删除空值', 14, 11)
 
-        # self.init_data_label = Label(self, text='待处理数据')
-        # self.init_data_label.grid(row=0, column=0)
-        # self.out_data_label = Label(self, text='输出结果')
-        # self.out_data_label.grid(row=0, column=12)
-
-        # self.init_data_text = Text(self, width=70, height=50)
-        # self.init_data_text.grid(row=1, column=0, rowspan=15, columnspan=10)
-        # self.out_data_text = Text(self, width=70, height=50)
-        # self.out_data_text.grid(row=1, column=12, rowspan=15, columnspan=10)
-
-        # self.format_button = Button(self, text='确定', bg='lightblue', width=10, command=self.confirm)
-        # self.format_button.grid(row=1, column=11)
-
-        # Label(self, text='前面添加').grid(row=2, column=11)
-        # add_before = StringVar()
-        # self.add_before = Entry(self, textvariable=add_before)
-        # self.add_before.grid(row=3, column=11)
-
-        # Label(self, text='后面添加').grid(row=4, column=11)
-        # add_later = StringVar()
-        # self.add_later = Entry(self, textvariable=add_later)
-        # self.add_later.grid(row=5, column=11)
-        #
-        # Label(self, text='前后添加').grid(row=6, column=11)
-        # add_b_l = StringVar()
-        # self.add_b_l = Entry(self, textvariable=add_b_l)
-        # self.add_b_l.grid(row=7, column=11)
-        #
-        # Label(self, text='分隔符').grid(row=8, column=11)
-        # delimiter = StringVar(value=",")
-        # self.delimiter = Entry(self, textvariable=delimiter)
-        # self.delimiter.grid(row=9, column=11)
-        #
-        # Label(self, text='剔除字符').grid(row=10, column=11)
-        # del_char = StringVar()
-        # self.del_char = Entry(self, textvariable=del_char)
-        # self.del_char.grid(row=11, column=11)
-
-        # self.del_repeate = IntVar(value=0)
-        # self.del_repeate_b = Checkbutton(self, text='删除重复值', variable=self.del_repeate, onvalue=1, offvalue=0)
-        # self.del_repeate_b.grid(row=12, column=11)
-        #
-        # self.del_newline = IntVar(value=1)
-        # self.del_newline_b = Checkbutton(self, text='删除换行', variable=self.del_newline, onvalue=1, offvalue=0)
-        # self.del_newline_b.grid(row=13, column=11)
-        #
-        # self.del_em_value = IntVar(value=1)
-        # self.del_em_value_b = Checkbutton(self, text='删除空值', variable=self.del_em_value, onvalue=1, offvalue=0)
-        # self.del_em_value_b.grid(row=14, column=11)
-
-        # self.format_button = Button(self, text='另存为', bg='lightblue', width=10, command=self.newFile)
-        # self.format_button.grid(row=15, column=11)
-
-    def newFile(self):
-        self.out_data = filedialog.asksaveasfilename(title="另存为", initialfile='未命名.txt', filetypes=[("文本文档", "*.txt")],
-                                                     defaultextension=".txt", initialdir='C:/Users')
-        self.confirm()
-        with open(self.out_data, "w") as f:
-            f.writelines(self.init_data)
-
     def confirm(self):
+        """数据格式化"""
+        print(self.init_data_text.get(1.0, END))
         self.init_data = self.init_data_text.get(1.0, END).split("\n")
         self.init_data.pop()
+
         # 删除空值
         if self.del_em_value.get() == 1:
-            # for i in range(0, len(init_data)):
-            #     if "" in init_data:
-            #         init_data.remove("")
             if "" in self.init_data:
                 self.init_data.remove("")
 
@@ -155,7 +89,6 @@ class Application(Frame):
 
         # 添加分隔符
         if len(self.delimiter.get()) > 0 and len(self.init_data) > 0:
-            # init_data = self.delimiter.get().join(init_data)
             self.init_data = [init_data_detail + self.delimiter.get() for init_data_detail in self.init_data]
             # 最后一个字符去掉分隔符
             self.init_data[-1] = self.init_data[-1][0:len(self.init_data[-1]) - len(self.delimiter.get())]
@@ -168,14 +101,11 @@ class Application(Frame):
         if len(self.del_char.get()) > 0:
             self.init_data = [init_data_detail.replace(self.del_char.get(), "") for init_data_detail in self.init_data]
 
-        with open(r"out_data.txt", "w") as f:
-            f.writelines(self.init_data)
-
-        with open(r'out_data.txt', 'r') as f:
-            self.out_text = f.read()
-
         self.out_data_text.delete(1.0, END)
-        self.out_data_text.insert(1.0, self.out_text)
+        self.out_data_text.insert(1.0, self.init_data)
+
+    def copy(self):
+        return pyperclip.copy(''.join(self.init_data))
 
 
 if __name__ == '__main__':
