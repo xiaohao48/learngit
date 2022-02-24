@@ -38,8 +38,9 @@ class Application(Frame):
         """创建组件"""
         # label
         self.createLabel("待处理数据", 0, 0)
-        self.createLabel('前面添加', 2, 11)
-        self.createLabel('后台添加', 4, 11)
+        self.createLabel("格式化数据", 0, 12)
+        self.createLabel('前端添加', 2, 11)
+        self.createLabel('末端添加', 4, 11)
         self.createLabel('前后添加', 6, 11)
         self.createLabel('分隔符', 8, 11)
         self.createLabel('剔除字符', 10, 11)
@@ -61,19 +62,26 @@ class Application(Frame):
 
         # checkButton
         self.del_repeate = self.createCheckButton(0, '删除重复值', 12, 11)
-        self.del_newline = self.createCheckButton(1, '删除换行', 13, 11)
+        self.del_newline = self.createCheckButton(0, '删除换行', 13, 11)
         self.del_em_value = self.createCheckButton(1, '删除空值', 14, 11)
 
     def confirm(self):
         """数据格式化"""
-        print(self.init_data_text.get(1.0, END))
         self.init_data = self.init_data_text.get(1.0, END).split("\n")
         self.init_data.pop()
+
+        # 删除重复值
+        if self.del_repeate.get() == 1:
+            self.init_data = list(set(self.init_data))
 
         # 删除空值
         if self.del_em_value.get() == 1:
             if "" in self.init_data:
                 self.init_data.remove("")
+
+        # 剔除字符
+        if len(self.del_char.get()) > 0:
+            self.init_data.remove(self.del_char.get())
 
         # 添加字符
         if len(self.add_before.get()) > 0:
@@ -83,29 +91,17 @@ class Application(Frame):
         if len(self.add_b_l.get()) > 0:
             self.init_data = ["{0}{1}{0}".format(self.add_b_l.get(), m) for m in self.init_data]
 
-        # 删除重复值
-        if self.del_repeate.get() == 1:
-            self.init_data = list(set(self.init_data))
-
-        # 添加分隔符
-        if len(self.delimiter.get()) > 0 and len(self.init_data) > 0:
-            self.init_data = [init_data_detail + self.delimiter.get() for init_data_detail in self.init_data]
-            # 最后一个字符去掉分隔符
-            self.init_data[-1] = self.init_data[-1][0:len(self.init_data[-1]) - len(self.delimiter.get())]
-
-        # 删除换行符
-        if self.del_newline.get() == 0:
-            self.init_data = [init_data_detail + "\n" for init_data_detail in self.init_data]
-
-        # 剔除字符
-        if len(self.del_char.get()) > 0:
-            self.init_data = [init_data_detail.replace(self.del_char.get(), "") for init_data_detail in self.init_data]
+        # 删除换行符&添加分隔符
+        if self.del_newline.get() == 1:
+            self.out_data = self.delimiter.get().join(self.init_data)
+        else:
+            self.out_data = (self.delimiter.get() + '\n').join(self.init_data)
 
         self.out_data_text.delete(1.0, END)
-        self.out_data_text.insert(1.0, self.init_data)
+        self.out_data_text.insert(1.0, self.out_data)
 
     def copy(self):
-        return pyperclip.copy(''.join(self.init_data))
+        return pyperclip.copy(''.join(self.out_data))
 
 
 if __name__ == '__main__':
