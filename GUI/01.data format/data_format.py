@@ -62,7 +62,7 @@ class Application(Frame):
 
         # checkButton
         self.del_repeate = self.createCheckButton(0, '删除重复值', 12, 11)
-        self.del_newline = self.createCheckButton(0, '删除换行', 13, 11)
+        self.del_newline = self.createCheckButton(1, '删除换行', 13, 11)
         self.del_em_value = self.createCheckButton(1, '删除空值', 14, 11)
 
     def confirm(self):
