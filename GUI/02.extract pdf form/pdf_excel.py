@@ -10,5 +10,5 @@ for page in filename:
     for pages in range(file_reader.getNumPages()):
         file_write.addPage(file_reader.getPage(pages))
 
-with open("C:/Users/xh411/Documents/WXWork/1688851257484603/Cache/File/2022-02/12. DESEMBER 2021/合并.pdf",'wb') as out:
+with open("C:/Users/xh411/Documents/WXWork/1688851257484603/Cache/File/2022-02/12. DESEMBER 2021/合并.pdf", 'wb') as out:
     file_write.write(out)
