@@ -5,5 +5,4 @@ build
 .spec
 .txt
 down
-data_format.spec
 .gitignore.bak
