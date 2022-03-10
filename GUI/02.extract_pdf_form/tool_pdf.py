@@ -5,6 +5,7 @@ import pdfplumber
 from openpyxl import Workbook
 import pyperclip
 from tkinter import simpledialog
+from tkinter import messagebox
 
 
 def create_widget():
@@ -61,40 +62,59 @@ def get_file_names():
 
 
 def get_pages():
-    page = simpledialog.askinteger(title='page of table', prompt='请输入表格所在页码', initialvalue=1)
+    page = simpledialog.askinteger(title='page of table', prompt='请输入表格所在页码(0表示所有)', initialvalue=1)
     return page
 
 
 def get_save_file():
-    file = simpledialog.askstring(title='name of table', prompt='请输入文件名', initialvalue='test')
+    file = simpledialog.askstring(title='name of table', prompt='请输入文件名', initialvalue='test.xlsx')
     return file
+
+
+def showinfo():
+    messagebox.showinfo(title='tips', message='输入错误或文件类型错误')
 
 
 def extract_pdf_table():
     path = choose_file()
     page = get_pages() - 1
-    with pdfplumber.open(path) as pdf:
-        page01 = pdf.pages[page]
-        table = page01.extract_table()
-    tables = []
-    for row in table:
-        tables.append(','.join(row))
-    show['text'] = '\n'.join(tables)
+    try:
+        with pdfplumber.open(path) as pdf:
+            page01 = pdf.pages[page]
+            table = page01.extract_table()
+        tables = []
+        for row in table:
+            tables.append(','.join(row))
+        show['text'] = '\n'.join(tables)
+    except:
+        showinfo()
 
 
 def extract_pdf_text():
     path = choose_file()
-    page = get_pages() - 1
-    with pdfplumber.open(path) as pdf:
-        page01 = pdf.pages[page]
-        text = page01.extract_text()
-    show['text'] = text
+    page = get_pages()
+    try:
+        if page == 0:
+            page_texts = []
+            with pdfplumber.open(path) as pdf:
+                for page_text in pdf.pages:
+                    text = page_text.extract_text()
+                    page_texts.append(text)
+            show['text'] = '\n'.join(page_texts)
+        elif page > 0:
+            page = page - 1
+            with pdfplumber.open(path) as pdf:
+                page_text = pdf.pages[page]
+                text = page_text.extract_text()
+            show['text'] = text
+    except:
+        showinfo()
 
 
 def save_table():
     workbook = Workbook()
     sheet = workbook.active
-    table = show['text.xlsx'].split('\n')
+    table = show['text'].split('\n')
     for row in table:
         sheet.append(row.split(','))
     f = get_save_file()

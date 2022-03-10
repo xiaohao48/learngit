@@ -81,7 +81,7 @@ class Application(Frame):
 
         # 剔除字符
         if len(self.del_char.get()) > 0:
-            self.init_data.remove(self.del_char.get())
+            self.init_data = [init_data_detail.replace(self.del_char.get(), "") for init_data_detail in self.init_data]
 
         # 添加字符
         if len(self.add_before.get()) > 0:
