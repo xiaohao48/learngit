@@ -57,8 +57,9 @@ def ask_file():
 
 def get_file_names():
     path = filedialog.askdirectory()
-    filenames = os.listdir(path)
-    show["text"] = "目录下文件：\n" + '\n'.join(filenames)
+    if path:
+        filenames = os.listdir(path)
+        show["text"] = "目录下文件：\n" + '\n'.join(filenames)
 
 
 def get_pages():
