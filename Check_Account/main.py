@@ -5,6 +5,10 @@ import pandas as pd
 from db_config import uatas_bi_db, uatas_bi_cursor, conn_engine
 import tkinter as tk
 from tkinter import filedialog
+import re
+
+Timestamp = int(time.time())
+print(Timestamp)
 
 
 def create_widget(master):
@@ -13,15 +17,17 @@ def create_widget(master):
     bt_frame.pack()
     choose_file_bt = tk.Button(bt_frame, text='选择文件', command=choose_file)
     choose_file_bt.pack(side="left")
-    loan_choose_bt = tk.Button(bt_frame, text="放款上传", command=lambda: loan_update(file))
-    loan_choose_bt.pack(side="left")
-    pay_OTC_bt = tk.Button(bt_frame, text="OTC还款上传", command=lambda: OTC_update(file))
-    pay_OTC_bt.pack(side="left")
-    pay_VA_bt = tk.Button(bt_frame, text="VA还款上传", command=lambda: VA_update(file))
-    pay_VA_bt.pack(side="left")
+    print(Timestamp)
+    # loan_choose_bt = tk.Button(bt_frame, text="放款上传", command=loan_update)
+    # loan_choose_bt.pack(side="left")
+    # pay_OTC_bt = tk.Button(bt_frame, text="OTC还款上传", command=OTC_update)
+    # pay_OTC_bt.pack(side="left")
+    # pay_VA_bt = tk.Button(bt_frame, text="VA还款上传", command=VA_update)
+    # pay_VA_bt.pack(side="left")
     check_bt = tk.Button(bt_frame, text="上传校对", command=check_file)
+    print(Timestamp)
     check_bt.pack(side="left")
-    out_bt = tk.Button(bt_frame, text="输出text", command=out_put)
+    out_bt = tk.Button(bt_frame, text="输出txt", command=out_put)
     out_bt.pack(side="left")
 
     text_frame = tk.Frame(master=master)
@@ -31,33 +37,66 @@ def create_widget(master):
 
 
 def choose_file():
-    global file, Timestamp
+    global files,Timestamp
     Timestamp = int(time.time())
     print(Timestamp)
-    file = filedialog.askopenfilename(title='选择文件')
+    # matchObj = re.match(r'dogs', line, re.M | re.I)
+    files = {}
+    file = filedialog.askopenfilenames(title='选择文件')
+    for file_element in file:
+        if re.search("Disbursement", file_element, re.M | re.I):
+            files["loan"] = file_element
+        if re.search("OTC", file_element, re.M | re.I):
+            files["OTC"] = file_element
+        if re.search("VA", file_element, re.M | re.I):
+            files["VA"] = file_element
+    print(files)
     if file:
         show_text.delete(1.0, tk.END)
         show_text.insert(1.0, file)
     return file
 
 
-def loan_update(file):
-    excel_import(file=file, column='F,G', type='loan')
-    show_text.insert(tk.INSERT, "\n" + file + "loan")
-
-
-def OTC_update(file):
-    excel_import(file=file, column='B,H', type='repay')
-    show_text.insert(tk.INSERT, "\n" + file + "OTC")
-
-
-def VA_update(file):
-    excel_import(file=file, column='F,G', type='repay')
-    show_text.insert(tk.INSERT, "\n" + file + "VA")
+# def loan_update():
+#     excel_import(file=files["loan"], column='F,G', type='loan')
+#     show_text.insert(tk.INSERT, "\n" + files["loan"] + "loan")
+#     data_comparison(Timestamp)
+#     data = export(Timestamp)
+#     uatas_bi_db.close()
+#     show_text.delete(1.0, tk.END)
+#     show_text.insert(1.0, data)
+#
+#
+# def OTC_update():
+#     excel_import(file=files["OTC"], column='B,H', type='repay')
+#     show_text.insert(tk.INSERT, "\n" + files["OTC"] + "OTC")
+#     data_comparison(Timestamp)
+#     data = export(Timestamp)
+#     uatas_bi_db.close()
+#     show_text.delete(1.0, tk.END)
+#     show_text.insert(1.0, data)
+#
+#
+# def VA_update():
+#     excel_import(file=files["VA"], column='F,G', type='repay')
+#     show_text.insert(tk.INSERT, "\n" + files["VA"] + "VA")
+#     data_comparison(Timestamp)
+#     data = export(Timestamp)
+#     uatas_bi_db.close()
+#     show_text.delete(1.0, tk.END)
+#     show_text.insert(1.0, data)
 
 
 def check_file():
+    if "loan" in files.keys():
+        excel_import(file=files["loan"], column='F,G', type='loan')
+    if "OTC" in files.keys():
+        excel_import(file=files["OTC"], column='B,H', type='repay')
+    if "VA" in files.keys():
+        excel_import(file=files["VA"], column='F,G', type='repay')
+    print(Timestamp)
     data_comparison(Timestamp)
+    print(Timestamp)
     data = export(Timestamp)
     uatas_bi_db.close()
     show_text.delete(1.0, tk.END)
@@ -83,6 +122,7 @@ def excel_import(file, column, type):
 
 
 def data_comparison(ctime):
+    uatas_bi_db.ping(reconnect=True)
     repaysql_1 = """UPDATE uatas_bi.temp_check_account tca JOIN  uatas_pay_3.repay_order ro on ro.repay_external_id=
     tca.external_id JOIN cash_pay_1.timepay_repay_order tro on ro.partner_transaction_no=tro.order_no AND 
     ro.plat_transaction_no=transaction_No AND ro.pay_no=tro.user_pay_no AND ro.payer_user_id=tro.payer_user_id JOIN 

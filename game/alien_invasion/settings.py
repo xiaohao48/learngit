@@ -16,7 +16,7 @@ class Settings():
         self.bullet_height = 15
         self.bullet_color = (255, 0, 0)
         self.bullet_allowed = 30
-        #self.bullet_speed_factor = 10
+        # self.bullet_speed_factor = 10
         # 外星人属性
         self.fleet_drop_speed = 10
 
