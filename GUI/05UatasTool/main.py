@@ -115,9 +115,9 @@ def mock_cloudun_callback():
     url = 'http://test-rc.uatas.id/rc/decisions/cloudun'
     data = {'data': "%s" % (aes_rc())}
     try:
-        result = requests.post(url, data)
+        result = requests.post(url, data, proxies=proxies)
         html = result.text
-        show_lb['text'] = html
+        show_lb['text'] = f'{html} {order_no.get()}回调成功'
     except:
         show_lb['text'] = f'{order_no.get()}模拟cloudun风控回调失败'
 
@@ -232,21 +232,23 @@ def order_overdue_ssh():
     connection.connect(hostname='jump-sz1.toolscash.top', port=22203, username='xiaohao', password='rOub8bWwc3mxhpjj',
                        allow_agent=False, look_for_keys=False)
     channel = connection.invoke_shell()
-    channel.settimeout(1000)
+    channel.settimeout(10)
+    channel.send(1 + '\n')
     time.sleep(3)
 
-    command = '1'
-    stdin, stdout, stderr = connection.exec_command(command)
-    command = '11'
-    stdin, stdout, stderr = connection.exec_command(command)
-    command = 'df -h'
-    stdin, stdout, stderr = connection.exec_command(command)
+    # command = '1'
+    # stdin, stdout, stderr = connection.exec_command(command)
+    # command = '11'
+    # stdin, stdout, stderr = connection.exec_command(command)
+    # command = 'df -h'
+    # stdin, stdout, stderr = connection.exec_command(command)
 
     # loginInfo = channel.recv(1024).decode('utf-8')
     # print(loginInfo)
     # command = 'df -h'
     # stdin, stdout, stderr = connection.exec_command(command)
-    print(stdout.read().decode('utf-8'))
+    # print(stdout.read().decode('utf-8'))
+    channel.close()
     connection.close()
 
     # trans = paramiko.Transport(('jump-sz1.toolscash.top', 22203))
@@ -321,7 +323,7 @@ if __name__ == '__main__':
     # 加密按钮
     aes_encrypt_bt = tk.Button(frame02, text='风控AES加密', command=aes_rc)
     aes_encrypt_bt.pack(side='left')
-    control_callback_bt = tk.Button(frame02, text='模拟cloudun回调', command=control_request)
+    control_callback_bt = tk.Button(frame02, text='模拟cloudun回调', command=mock_cloudun_callback)
     control_callback_bt.pack(side='left')
 
     """第三行"""
