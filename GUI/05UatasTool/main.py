@@ -4,6 +4,9 @@ import json
 import pymysql
 from sshtunnel import SSHTunnelForwarder
 import paramiko
+import pyperclip
+import sys
+import time
 
 order_no = None
 risk_loan_level = ['LEVEL_ONE', 'LEVEL_TWO', 'LEVEL_THREE']
@@ -24,54 +27,111 @@ SSH_mysql_config = {
     'remote_bind_address': ('149.129.214.137', 3306)
 }
 proxies = {
-    "http": 'http://127.0.0.1:1080'
-    # "https": 'https://vhk.toolscash.top:52999'
+    "http": None,
+    "https": None
+}
+aes_key_iv = {
+    "uatas_rc": {"key": "uaRZnvZoJZ8KSTuE", "iv": "IFwDpMo01xY05ovH"},  # uatas风控
+    "front_end": {"key": "THi8cml8EPlcdkfh", "iv": "1Q2ik8vpod90lhTg"},  # 前端
+    "back_end": {"key": "k169flxzbooneepf", "iv": "abc123rty456nji7"}  # 后台
 }
 
 
-def aes_encrypt():
+def aes_encrypt(url, password, iv, way, text):
     """AES加密"""
-    url = 'https://tool.lmeee.com/jiami/crypt128inter'
     data = {
         "mode": "CBC",
         "padding": "pkcs5",
         "block": 128,
-        "password": "uaRZnvZoJZ8KSTuE",
-        "iv": "IFwDpMo01xY05ovH",
+        "password": password,
+        "iv": iv,
         "encode": "base64",
-        "way": 1,
-        "text": "{\"code\":0,\"data\":{\"code\":200,\"feature_list\":[],\"forbidApplyUntil\":1647746861000,\"loan_type\":0,\"order_no\":\"%s\",\"partner_id\":9000,\"passed\":\"false\",\"risk_amount\":\"0\",\"risk_loan_level\":\"%s\",\"sign\":\"4e32c73dafe476209843fd916a5cccb0\",\"user_idcard\":\"1141210809980028\",\"user_level\":\"%s\",\"user_name\":\"twenty seven\",\"user_phone\":\"82112341028\",\"zeus_order_no\":\"%s\"},\"msg\":\"\"}"%(order_no.get(),risk_loan_level_var.get(),user_level_var.get(),order_no.get()),
+        "way": way,  # 1-加密，2-解密
+        "text": text,
         "method": "aes"
     }
     try:
-        result = requests.post(url=url, data=data)
+        result = requests.post(url=url, data=data, proxies=proxies)
         html = result.text
         encrypt_date = json.loads(html)['d']['r']
         show_lb['text'] = encrypt_date
         return encrypt_date
     except:
-        show_lb['text'] = f'{order_no.get()}加密失败'
+        show_lb['text'] = f'{order_no.get()}加解密失败'
+
+
+def aes_rc():
+    url = 'https://tool.lmeee.com/jiami/crypt128inter'
+    password = aes_key_iv['uatas_rc']['key']
+    iv = aes_key_iv['uatas_rc']['iv']
+    way = 1
+    text = "{\"code\":0,\"data\":{\"code\":200,\"feature_list\":[],\"forbidApplyUntil\":1647746861000,\"loan_type\":0,\"order_no\":\"%s\",\"partner_id\":9000,\"passed\":\"false\",\"risk_amount\":\"0\",\"risk_loan_level\":\"%s\",\"sign\":\"4e32c73dafe476209843fd916a5cccb0\",\"user_idcard\":\"1141210809980028\",\"user_level\":\"%s\",\"user_name\":\"twenty seven\",\"user_phone\":\"82112341028\",\"zeus_order_no\":\"%s\"},\"msg\":\"\"}" % (
+        order_no.get(), risk_loan_level_var.get(), user_level_var.get(), order_no.get())
+    aes_encrypt(url, password, iv, way, text)
+
+
+def front_end_encrypt():
+    """前端加密"""
+    url = 'https://tool.lmeee.com/jiami/crypt128inter'
+    password = aes_key_iv['front_end']['key']
+    iv = aes_key_iv['front_end']['iv']
+    way = 1
+    text = data_encrypt_var.get()
+    aes_encrypt(url, password, iv, way, text)
+
+
+def front_end_decrypt():
+    """前端解密"""
+    url = 'https://tool.lmeee.com/jiami/crypt128inter'
+    password = aes_key_iv['front_end']['key']
+    iv = aes_key_iv['front_end']['iv']
+    way = 2
+    text = data_encrypt_var.get()
+    aes_encrypt(url, password, iv, way, text)
+
+
+def back_end_encrypt():
+    """后台加密"""
+    url = 'https://tool.lmeee.com/jiami/crypt128inter'
+    password = aes_key_iv['back_end']['key']
+    iv = aes_key_iv['back_end']['iv']
+    way = 1
+    text = data_encrypt_var.get()
+    aes_encrypt(url, password, iv, way, text)
+
+
+def back_end_decrypt():
+    """后台解密"""
+    url = 'https://tool.lmeee.com/jiami/crypt128inter'
+    password = aes_key_iv['back_end']['key']
+    iv = aes_key_iv['back_end']['iv']
+    way = 2
+    text = data_encrypt_var.get()
+    aes_encrypt(url, password, iv, way, text)
 
 
 def mock_cloudun_callback():
     """模拟cloudun风控回调"""
     url = 'http://test-rc.uatas.id/rc/decisions/cloudun'
-    data = {'data': "%s" % (aes_encrypt())}
-    # show_lb['text'] = data
-    print(data)
-    # result = requests.post(url, data)
-    # html = result.text
-    # print(html)
+    data = {'data': "%s" % (aes_rc())}
+    try:
+        result = requests.post(url, data)
+        html = result.text
+        show_lb['text'] = html
+    except:
+        show_lb['text'] = f'{order_no.get()}模拟cloudun风控回调失败'
 
 
 def control_request():
     """订单请求风控"""
     url = 'http://test-rc.uatas.id/rc/check'
     data = {'data': '{"order_no": "%s" }' % order_no.get()}
-    show_lb['text'] = data
-    # result = requests.post(url, data)
-    # html = result.text
-    # print(html)
+    try:
+        result = requests.post(url, data)
+        html = result.text
+        show_lb['text'] = html
+    except:
+        show_lb['text'] = f'{order_no.get()}请求风控失败'
 
 
 def ssh_sever_start():
@@ -166,17 +226,56 @@ def order_overdue_sql():
 
 
 def order_overdue_ssh():
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname='jump-sz1.toolscash.top', port=22203, username='xiaohao', password='rOub8bWwc3mxhpjj')
-    stdin, stdout, stderr = client.exec_command('df -h')
+    connection = paramiko.SSHClient()
+    connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    connection.connect(hostname='jump-sz1.toolscash.top', port=22203, username='xiaohao', password='rOub8bWwc3mxhpjj',
+                       allow_agent=False, look_for_keys=False)
+    channel = connection.invoke_shell()
+    channel.settimeout(1000)
+    time.sleep(3)
+
+    command = '1'
+    stdin, stdout, stderr = connection.exec_command(command)
+    command = '11'
+    stdin, stdout, stderr = connection.exec_command(command)
+    command = 'df -h'
+    stdin, stdout, stderr = connection.exec_command(command)
+
+    # loginInfo = channel.recv(1024).decode('utf-8')
+    # print(loginInfo)
+    # command = 'df -h'
+    # stdin, stdout, stderr = connection.exec_command(command)
     print(stdout.read().decode('utf-8'))
-    client.close()
+    connection.close()
+
+    # trans = paramiko.Transport(('jump-sz1.toolscash.top', 22203))
+    # print(trans , str(sys._getframe().f_lineno))
+    # # trans.start_client()
+    # trans.auth_password(username='xiaohao', password='rOub8bWwc3mxhpjj')
+    # channel = trans.open_session(11)
+    # print(channel)
+    # channel.get_pty()
+    # a = channel.invoke_shell()
+    # print(a)
+    # print(channel.recv(65535).decode('utf-8'))
+    #
+    # channel.close()
+    # trans.close()
 
 
 def clear_data():
     order_no.set(value='')
     show_lb['text'] = '已清空'
+
+
+def copy():
+    return pyperclip.copy(show_lb['text'])
+
+
+def create_button(master, text, command, side=''):
+    new_button = tk.Button(master=master, text=text, command=command)
+    new_button.pack(side=side)
 
 
 if __name__ == '__main__':
@@ -197,10 +296,14 @@ if __name__ == '__main__':
     # 清空按钮
     clear_bt = tk.Button(frame01, text='清空', command=clear_data)
     clear_bt.pack(side='left')
+    # 复制按钮
+    copy_bt = tk.Button(frame01, text='复制', command=copy)
+    copy_bt.pack(side='left')
     # 系统选择
     system_var = tk.StringVar(value='uatas test')
     system_op = tk.OptionMenu(frame01, system_var, *system)
     system_op.pack(side='left')
+
     """第二行"""
     frame02 = tk.Frame(master=root)
     frame02.pack()
@@ -216,10 +319,11 @@ if __name__ == '__main__':
     control_request_bt = tk.Button(frame02, text='请求风控', command=control_request)
     control_request_bt.pack(side='left')
     # 加密按钮
-    aes_encrypt_bt = tk.Button(frame02, text='AES加密', command=aes_encrypt)
+    aes_encrypt_bt = tk.Button(frame02, text='风控AES加密', command=aes_rc)
     aes_encrypt_bt.pack(side='left')
     control_callback_bt = tk.Button(frame02, text='模拟cloudun回调', command=control_request)
     control_callback_bt.pack(side='left')
+
     """第三行"""
     frame03 = tk.Frame(master=root)
     frame03.pack()
@@ -243,10 +347,23 @@ if __name__ == '__main__':
     # 放款拉取
     # 还款拉取
 
+    """加解密行"""
+    frame_encrypt = tk.Frame(master=root)
+    frame_encrypt.pack()
+    # 加解密数据输入
+    data_encrypt_var = tk.StringVar(frame_encrypt)
+    data_encrypt_entry = tk.Entry(frame_encrypt, text=data_encrypt_var)
+    data_encrypt_entry.pack()
+    front_end_encrypt_bt = create_button(frame_encrypt, text="前端加密", command=front_end_encrypt, side='left')
+    front_end_decrypt_bt = create_button(frame_encrypt, text="前端解密", command=front_end_decrypt, side='left')
+    back_end_encrypt_bt = create_button(frame_encrypt, text="后台加密", command=back_end_encrypt, side='left')
+    back_end_decrypt_bt = create_button(frame_encrypt, text="后台解密", command=back_end_decrypt, side='left')
+
+    """展示行"""
     frame_show = tk.Frame(master=root)
     frame_show.pack()
     # 展示标签
-    show_lb = tk.Label(frame_show, text='show', wraplength=800)
+    show_lb = tk.Label(frame_show, text='show', wraplength=800, background='green')
     show_lb.pack(side='left')
 
     root.mainloop()
