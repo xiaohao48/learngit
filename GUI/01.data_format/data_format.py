@@ -44,10 +44,12 @@ class Application(Frame):
         self.createLabel('前后添加', 6, 11)
         self.createLabel('分隔符', 8, 11)
         self.createLabel('剔除字符', 10, 11)
+        self.show_label = Label(self, text="show label", width=70, height=38, bg='green', wraplength=450)
+        self.show_label.grid(row=1, column=12, rowspan=16, columnspan=10)
 
         # text
         self.init_data_text = self.createText(70, 50, 1, 0, 16, 10)
-        self.out_data_text = self.createText(70, 50, 1, 12, 16, 10)
+        # self.out_data_text = self.createText(70, 50, 1, 12, 16, 10)
 
         # button
         self.createButton("确定", self.confirm, 1, 11)
@@ -67,6 +69,7 @@ class Application(Frame):
 
     def confirm(self):
         """数据格式化"""
+        self.show_label['text'] = ''
         self.init_data = self.init_data_text.get(1.0, END).split("\n")
         self.init_data.pop()
 
@@ -93,15 +96,18 @@ class Application(Frame):
 
         # 删除换行符&添加分隔符
         if self.del_newline.get() == 1:
-            self.out_data = self.delimiter.get().join(self.init_data)
+            self.init_data = self.delimiter.get().join(self.init_data)
         else:
-            self.out_data = (self.delimiter.get() + '\n').join(self.init_data)
+            self.init_data = (self.delimiter.get() + '\n').join(self.init_data)
 
-        self.out_data_text.delete(1.0, END)
-        self.out_data_text.insert(1.0, self.out_data)
+        # self.out_data_text.delete(1.0, END)
+        # self.out_data_text.insert(1.0, self.out_data)
+
+        self.show_label['text'] = self.init_data
 
     def copy(self):
-        return pyperclip.copy(''.join(self.out_data))
+        # return pyperclip.copy(''.join(self.out_data))
+        return pyperclip.copy(self.show_label['text'])
 
 
 if __name__ == '__main__':
