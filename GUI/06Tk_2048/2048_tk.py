@@ -29,8 +29,8 @@ fg_color = {
     '1024': '#f9f6f2',
     '2048': '#f9f6f2',
 }
-rows = 2
-columns = 4
+rows = 3
+columns = 5
 squ_size = [rows, columns]
 gridCell_label = []
 gridCell_num = [[0] * columns for n in range(rows)]
@@ -79,23 +79,96 @@ def show_num():
                                                    fg=fg_color[str(gridCell_num[row][column])],
                                                    text=gridCell_num[row][column])
             else:
-                gridCell_label[row][column].config(bg='azure4')
+                gridCell_label[row][column].config(bg='azure4', text='')
 
 
 def move(event):
     derictions = {
         'Up': "print('up')",
         'Down': "print('down')",
-        'Left': left,
+        'Left': "left",
         'Right': "print('right')",
     }
     # sys._getframe().f_lineno
     pressed_key = event.keysym
-    print(pressed_key, event.keysym, sys._getframe().f_lineno)
-    if event.keysym in derictions.keys():
-        print(derictions[event.keysym])
-        derictions[event.keysym]
+    # print(pressed_key, sys._getframe().f_lineno)
+    if pressed_key == 'Left':
+        compressGridLevel()
+    if pressed_key == 'Right':
+        leftToRight()
+        compressGridLevel()
+        leftToRight()
+    if pressed_key == 'Up':
+        transposeToVertical()
+        compressGridVertical()
+        transposeToLevel()
+    if pressed_key == 'Down':
+        transposeToVertical()
+        leftToRight()
+        compressGridVertical()
+        leftToRight()
+        transposeToLevel()
 
+    random_num()
+    show_num()
+
+
+def compressGridLevel():
+    """水平方向移动压缩"""
+    global gridCell_num
+    compressedCell = [[0] * columns for i in range(rows)]
+    for row in range(rows):
+        compressed_column = 0
+        for column in range(columns):
+            if gridCell_num[row][column] != 0:
+                compressedCell[row][compressed_column] = gridCell_num[row][column]
+                compressed_column += 1
+    gridCell_num = compressedCell
+    print(gridCell_num)
+
+
+def compressGridVertical():
+    """竖直方向转置后移动压缩"""
+    global gridCell_num
+    compressedCell = [[0] * rows for i in range(columns)]
+    for row in range(columns):
+        compressed_column = 0
+        for column in range(rows):
+            if gridCell_num[row][column] != 0:
+                compressedCell[row][compressed_column] = gridCell_num[row][column]
+                compressed_column += 1
+    gridCell_num = compressedCell
+
+
+def transposeToVertical():
+    """水平转竖直"""
+    global gridCell_num
+    transposeCell = [[0] * rows for i in range(columns)]
+    print(transposeCell)
+    for row in range(rows):
+        for column in range(columns):
+            transposeCell[column][row] = gridCell_num[row][column]
+    gridCell_num = transposeCell
+
+
+def transposeToLevel():
+    """竖直转水平"""
+    global gridCell_num
+    transposeCell = [[0] * columns for i in range(rows)]
+    for row in range(columns):
+        for column in range(rows):
+            transposeCell[column][row] = gridCell_num[row][column]
+    gridCell_num = transposeCell
+
+
+def leftToRight():
+    """左右倒置"""
+    global gridCell_num
+    left_to_right_num = []
+    for rows_num in gridCell_num:
+        rows_num_new = rows_num[::-1]
+        left_to_right_num.append(rows_num_new)
+    gridCell_num = left_to_right_num
 
 
 def left():
