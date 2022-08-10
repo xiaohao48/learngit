@@ -1,6 +1,7 @@
 import tkinter as tk
 import random
 import sys
+from tkinter import messagebox
 
 bg_color = {
     # '': 'azure4',
@@ -34,6 +35,9 @@ columns = 5
 squ_size = [rows, columns]
 gridCell_label = []
 gridCell_num = [[0] * columns for n in range(rows)]
+score = 0
+max_num = 2048
+can_merge = False
 
 
 def create_widget():
@@ -61,13 +65,16 @@ def random_num():
         for column in range(columns):
             if gridCell_num[row][column] == 0:
                 random_cells.append((row, column))
-    random_cell = random.choice(random_cells)
-    random_text = random.choice([2, 4])
-    gridCell_num[random_cell[0]][random_cell[1]] = random_text
-    print('row=' + str(random_cell[0]),
-          'columu=' + str(random_cell[1]),
-          'random_text=' + str(random_text),
-          'lineno=' + str(sys._getframe().f_lineno))
+    if random_cells != []:
+        random_cell = random.choice(random_cells)
+        random_text = random.choice([2, 4])
+        gridCell_num[random_cell[0]][random_cell[1]] = random_text
+        # print('row=' + str(random_cell[0]),
+        #       'columu=' + str(random_cell[1]),
+        #       'random_text=' + str(random_text),
+        #       'lineno=' + str(sys._getframe().f_lineno))
+    else:
+        messagebox.showinfo(title='提示', message='Game over!')
 
 
 def show_num():
@@ -94,23 +101,31 @@ def move(event):
     # print(pressed_key, sys._getframe().f_lineno)
     if pressed_key == 'Left':
         compressGridLevel()
+        mergeGridLevel()
     if pressed_key == 'Right':
         leftToRight()
         compressGridLevel()
+        mergeGridLevel()
         leftToRight()
     if pressed_key == 'Up':
         transposeToVertical()
         compressGridVertical()
+        mergeGridVertical()
         transposeToLevel()
     if pressed_key == 'Down':
         transposeToVertical()
         leftToRight()
         compressGridVertical()
+        mergeGridVertical()
         leftToRight()
         transposeToLevel()
 
     random_num()
     show_num()
+
+    endGame()
+
+    print(f'分数={score}')
 
 
 def compressGridLevel():
@@ -124,7 +139,7 @@ def compressGridLevel():
                 compressedCell[row][compressed_column] = gridCell_num[row][column]
                 compressed_column += 1
     gridCell_num = compressedCell
-    print(gridCell_num)
+    # print(gridCell_num)
 
 
 def compressGridVertical():
@@ -144,7 +159,7 @@ def transposeToVertical():
     """水平转竖直"""
     global gridCell_num
     transposeCell = [[0] * rows for i in range(columns)]
-    print(transposeCell)
+    # print(transposeCell)
     for row in range(rows):
         for column in range(columns):
             transposeCell[column][row] = gridCell_num[row][column]
@@ -171,30 +186,36 @@ def leftToRight():
     gridCell_num = left_to_right_num
 
 
-def left():
-    for row in range(0, rows):
-        # for column in range(0, columns - 1):
-        column = 0
-        while column < columns - 1:
-            print(str(gridCell_num[row][column]), sys._getframe().f_lineno)
-            if str(gridCell_num[row][column]) == '':
-                gridCell_num[row][column], gridCell_num[row][column + 1] = gridCell_num[row][column + 1], \
-                                                                           gridCell_num[row][column]
-                show_num()
-                print(gridCell_num[row][column], sys._getframe().f_lineno)
-                column += 1
-            else:
+def mergeGridLevel():
+    global score, can_merge
+    # can_merge = False
+    for row in range(rows):
+        for column in range(columns - 1):
+            if gridCell_num[row][column] == gridCell_num[row][column + 1]:
+                gridCell_num[row][column] *= 2
+                gridCell_num[row][column + 1] = 0
+                score += gridCell_num[row][column]
+                can_merge = True
+
+
+def mergeGridVertical():
+    global score, can_merge
+    # can_merge = False
+    for row in range(columns):
+        for column in range(rows - 1):
+            if gridCell_num[row][column] == gridCell_num[row][column + 1]:
+                gridCell_num[row][column] *= 2
+                gridCell_num[row][column + 1] = 0
+                score += gridCell_num[row][column]
+                can_merge = True
+
+
+def endGame():
+    for row in range(rows):
+        for column in range(columns):
+            if can_merge == False or gridCell_num[row][column] == max_num:
+                messagebox.showinfo(title='提示', message=f'游戏结束，最高分{score}')
                 break
-    # print(num_list)
-    # show_num()
-
-
-def fix_geometry():
-    width = ''
-
-
-def create_font():
-    ...
 
 
 if __name__ == '__main__':
