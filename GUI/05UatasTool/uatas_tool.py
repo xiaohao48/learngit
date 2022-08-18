@@ -19,7 +19,7 @@ uatas_mysql_config = {
     'port': 3306,
     'user': 'uatas',
     'password': 'c8CMsFW7pHmpjRss',
-    'db': 'test_uatas',
+    'db': 'test',
     'charset': 'utf8'
 }
 SSH_mysql_config = {
@@ -38,6 +38,7 @@ aes_key_iv = {
     "front_end_uatas": {"key": "daDtbXYkhhnHi1XF", "iv": "H9Rlows19wkBSx3w"},  # uatas前端
     "back_end_uatas": {"key": "z1aXNVB4JJw4ZZ0r", "iv": "LzsCmdfFbAvQ1fbD"}  # uatas后台
 }
+"""脚本列表"""
 scripts = {
     '展期生成新订单': 'php /home/rong/www/time-core/webroot/batch.php push VirtualOrderNotify',
     'uatas放款拉取': "php /home/rong/www/time-pay/webroot/batch.php TimePayLoan PollingLoanResult --payHandel='UP'",
@@ -47,20 +48,87 @@ scripts = {
     "uatas入催收": "php /home/rong/www/time-core/webroot/batch.php RepayPlanTask IncuiShouTask",
     "用户storage目录查询": 'php -r "echo crc32() % 10;"',
     "uatas api绑定银行卡": "php /home/rong/www/time-order/webroot/command.php Customer ConsumeBankCard",
-    "oppo打包放款": "php /home/rong/UatasPay/yii batch-disbursement/batch-loan"
+    "oppo打包放款": "php /home/rong/UatasPay/yii batch-disbursement/batch-loan",
+    "贷后自动分单": "php /home/rong/www/time-cuishou/webroot/batch.php Daihouivr AssignDaihouTask --mid=10",
+    "催收自动分单": "php /home/rong/www/time-cuishou/webroot/batch.php cuishou AssignCuishouTask --mid=10",
+    "贷后任务扭转": "php /home/rong/www/time-cuishou/webroot/batch.php Daihouivr Sds",
+    "催收任务扭转": "php /home/rong/www/time-cuishou/webroot/batch.php cuishou Sds",
 }
-
-encrypt_list = [
-    ['zeus前端加密', {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 1}],
-    ['zeus前端解密', {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 2}],
-    ['zeus后端加密', {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 1}],
-    ['zeus后端解密', {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 2}],
-    ['uatas前端加密', {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 1}],
-    ['uatas前端解密', {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 2}],
-    ['uatas后端加密', {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 1}],
-    ['uatas后端解密', {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 2}]
-]
-encrypt_dict = dict(encrypt_list)
+encrypt_dict = {
+    'zeus前端加密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 1},
+    'zeus前端解密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 2},
+    'zeus后端加密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 1},
+    'zeus后端解密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 2},
+    'uatas前端加密': {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 1},
+    'uatas前端解密': {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 2},
+    'uatas后端加密': {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 1},
+    'uatas后端解密': {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 2}
+}
+rc_request_dict = {
+    "测试Uatas请求风控": [
+        "http://test-rc.uatas.id/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "正式Uatas请求风控": [
+        "http://rc.uatas.id/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "测试UatasFly请求风控": [
+        "https://test-rc.modalandalan.site/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "正式UatasFly请求风控": [
+        "http://rc.modalandalan.site/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "测试finplus请求风控": [
+        "http://test-rc.finplus.id/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "正式finplus请求风控": [
+        "https://rc.finplus.id/rc/check", '{"data":{"order_no":"276688849607429"}}'
+    ],
+    "测试uatas设备信息": [
+        "http://test-api.uatas.id/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "正式uatas设备信息": [
+        "http://api.uatas.id/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "测试uatasfly设备信息": [
+        "http://test-api.modalandalan.site/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "正式uatasfly设备信息": [
+        "http://api.modalandalan.site/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "测试finplus设备信息": [
+        "http://test-api.finplus.id/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "正式finplus设备信息": [
+        "http://api.finplus.id/api/thirdapi/getdeviceinfo",
+        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'
+    ],
+    "moneypay放款": [
+        "http://sandbox-pay.moneypaynow.com/sand-box/notify",
+        '{"order_type":"loan","order_no":"22072313395637251675","order_status":1,"e_msg":""}'
+    ],
+    "moneypay还款": [
+        "http://sandbox-pay.moneypaynow.com/sand-box/notify",
+        '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'
+    ],
+    "monetapay还款": [
+        "http://sandbox-api.monetapay.net/simulation/payForVa",
+        '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'
+    ]
+}
+system = {
+    "uatas": "http://test-api.uatas.id",
+    "uatasfly": "http://test-api.modalandalan.site",
+    "finplus": "https://rc.finplus.id"
+}
+rc_url_list = {
+    "check": "/rc/check",
+    "getdeviceinfo": "/api/thirdapi/getdeviceinfo"
+}
 
 
 def data_encrypt():
@@ -101,13 +169,19 @@ def aes_encrypt(url, password, iv, way, text):
 
 
 def aes_rc():
-    password = aes_key_iv['uatas_rc']['key']
-    iv = aes_key_iv['uatas_rc']['iv']
-    way = 1
-    text = "{\"code\":0,\"data\":{\"code\":200,\"feature_list\":[],\"forbidApplyUntil\":1647746861000,\"loan_type\":0,\"order_no\":\"%s\",\"partner_id\":9000,\"passed\":\"false\",\"risk_amount\":\"0\",\"risk_loan_level\":\"%s\",\"sign\":\"4e32c73dafe476209843fd916a5cccb0\",\"user_idcard\":\"1141210809980028\",\"user_level\":\"%s\",\"user_name\":\"twenty seven\",\"user_phone\":\"82112341028\",\"zeus_order_no\":\"%s\"},\"msg\":\"\"}" % (
-        order_no.get(), risk_loan_level_var.get(), user_level_var.get(), order_no.get())
-    aes = aes_encrypt(url_crypt, password, iv, way, text)
-    return aes
+    if len(order_no.get()) == 15:
+        password = aes_key_iv['uatas_rc']['key']
+        iv = aes_key_iv['uatas_rc']['iv']
+        way = 1
+        text = "{\"code\":0,\"data\":{\"code\":200,\"feature_list\":[],\"forbidApplyUntil\":1647746861000,\"loan_type\":0," \
+               "\"order_no\":\"%s\",\"partner_id\":9000,\"passed\":\"false\",\"risk_amount\":\"0\",\"risk_loan_level\":\"%s\"," \
+               "\"sign\":\"4e32c73dafe476209843fd916a5cccb0\",\"user_idcard\":\"1141210809980028\",\"user_level\":\"%s\"," \
+               "\"user_name\":\"twenty seven\",\"user_phone\":\"82112341028\",\"zeus_order_no\":\"%s\"},\"msg\":\"\"}" \
+               % (order_no.get(), risk_loan_level_var.get(), user_level_var.get(), order_no.get())
+        aes = aes_encrypt(url_crypt, password, iv, way, text)
+        return aes
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 # def front_end_encrypt():
@@ -152,33 +226,39 @@ def aes_rc():
 
 def mock_cloudun_callback():
     """模拟cloudun风控回调"""
-    url = 'http://test-rc.uatas.id/rc/decisions/cloudun'
-    data = json.dumps({"data": "%s" % (aes_rc())})
-    try:
-        result = requests.post(url, data, proxies=proxies)
-        html = result.text
-        show_lb['text'] = f'{html} {order_no.get()}回调成功'
-    except:
-        show_lb['text'] = f'{order_no.get()}模拟cloudun风控回调失败'
+    if len(order_no.get()) == 15:
+        url = 'http://test-rc.uatas.id/rc/decisions/cloudun'
+        data = json.dumps({"data": "%s" % (aes_rc())})
+        try:
+            result = requests.post(url, data, proxies=proxies)
+            html = result.text
+            show_lb['text'] = f'{html} {order_no.get()}回调成功'
+        except:
+            show_lb['text'] = f'{order_no.get()}模拟cloudun风控回调失败'
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 def control_request():
     """订单请求风控"""
-    sql = f'UPDATE cash_order.orders as o SET o.create_time=FROM_UNIXTIME(UNIX_TIMESTAMP(o.create_time)-3600) ' \
-          f'WHERE o.order_no={order_no.get()};'
-    mysql_modify(mysql_connect(), sql)
+    if len(order_no.get()) == 15:
+        sql = f'UPDATE cash_order.orders as o SET o.create_time=FROM_UNIXTIME(UNIX_TIMESTAMP(o.create_time)-3600) ' \
+              f'WHERE o.order_no={order_no.get()};'
+        mysql_modify(mysql_connect(), sql)
 
-    # time.sleep(2)
-    ssh_sever_end()
-    url = 'http://test-rc.uatas.id/rc/check'
-    data = {'data': '{"order_no": "%s" }' % order_no.get()}
-    print(data)
-    try:
-        result = requests.post(url, data)
-        html = result.text
-        show_lb['text'] = html
-    except:
-        show_lb['text'] = f'{order_no.get()}请求风控失败'
+        # time.sleep(2)
+        ssh_sever_end()
+        url = 'http://test-rc.uatas.id/rc/check'
+        data = {'data': '{"order_no": "%s" }' % order_no.get()}
+        # print(data)
+        try:
+            result = requests.post(url, data)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = f'{order_no.get()}请求风控失败'
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 def ssh_sever_start():
@@ -240,50 +320,88 @@ def mysql_modify(db, sql):
 
 def select_order():
     """数据库订单状态查询"""
-    db = mysql_connect()
-    sql = f'SELECT o.order_no,o.`status` FROM cash_order.orders as o WHERE o.order_no ={order_no.get()};'
-    mysql_select(db, sql)
-    ssh_sever_end()
+    if len(order_no.get()) == 15:
+        db = mysql_connect()
+        sql = f'SELECT o.order_no,o.`status` FROM cash_order.orders as o WHERE o.order_no ={order_no.get()};'
+        mysql_select(db, sql)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 def modify_machine_status():
     """修改机审状态"""
-    db = mysql_connect()
-    sqls = [
-        f'UPDATE cash_order.orders as o SET o.status=45 WHERE o.order_no={order_no.get()};',
-        f'UPDATE cash_approve.approve as a SET a.machine_status=1 WHERE a.order_no={order_no.get()};'
-    ]
-    for sql in sqls:
-        mysql_modify(db, sql)
-    ssh_sever_end()
+    if len(order_no.get()) == 15:
+        db = mysql_connect()
+        sqls = [
+            f'UPDATE cash_order.orders as o SET o.status=45 WHERE o.order_no={order_no.get()};',
+            f'UPDATE cash_approve.approve as a SET a.machine_status=1 WHERE a.order_no={order_no.get()};'
+        ]
+        for sql in sqls:
+            mysql_modify(db, sql)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 def order_change_reloan():
     """修改订单状态未待重新放款"""
-    db = mysql_connect()
-    sqls = [
-        f'UPDATE cash_order.orders as o SET o.`status`=85 WHERE o.order_no={order_no.get()};',
-        f'UPDATE cash_core.loan as l SET l.`status`=3 WHERE l.order_No={order_no.get()};',
-        f'UPDATE cash_core.pay_record_log as g SET g.order_status=3 WHERE g.loan_id in (SELECT l.id FROM cash_core.loan as l WHERE l.order_No={order_no.get()});',
-        f'UPDATE cash_pay.timepay_loan_order as p SET p.`status`=3 WHERE p.loan_no ={order_no.get()};'
-    ]
-    for sql in sqls:
-        mysql_modify(db, sql)
-    ssh_sever_end()
+    if len(order_no.get()) == 15:
+        db = mysql_connect()
+        sqls = [
+            f'UPDATE cash_order.orders as o SET o.`status`=85 WHERE o.order_no={order_no.get()};',
+            f'UPDATE cash_core.loan as l SET l.`status`=3 WHERE l.order_No={order_no.get()};',
+            f'UPDATE cash_core.pay_record_log as g SET g.order_status=3 WHERE g.loan_id in '
+            f'(SELECT l.id FROM cash_core.loan as l WHERE l.order_No={order_no.get()});',
+            f'UPDATE cash_pay.timepay_loan_order as p SET p.`status`=3 WHERE p.loan_no ={order_no.get()};'
+        ]
+        for sql in sqls:
+            mysql_modify(db, sql)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
-def order_overdue_sql():
-    """修改订单逾期"""
-    db = mysql_connect()
-    sqls = [
-        f'DELETE FROM `cash_core`.`day_order_acc` WHERE `loan_id` in (select id from cash_core.`loan` where order_No ={order_no.get()});',
-        f'UPDATE cash_core.`loan` SET loan_time =loan_time-86400*1 where order_No={order_no.get()};',
-        f'UPDATE cash_core.repayment_plan_detail SET  due_time=due_time-86400*1 where loan_id in (select id from cash_core.`loan` where order_No = {order_no.get()});',
-        f'UPDATE cash_order.orders as o SET o.loan_time=o.loan_time-86400*1 WHERE o.order_no={order_no.get()};'
-    ]
-    for sql in sqls:
-        mysql_modify(db, sql)
-    ssh_sever_end()
+def order_overdue_sql1():
+    """向前修改到期日(逾期)"""
+    if len(order_no.get()) == 15 and len(overduedays_var.get()) > 0:
+        db = mysql_connect()
+        sqls = [
+            f'DELETE FROM `cash_core`.`day_order_acc` WHERE `loan_id` in (select id from cash_core.`loan` '
+            f'where order_No ={order_no.get()});',
+            f'UPDATE cash_core.`loan` SET loan_time =loan_time-86400*{overduedays_var.get()} where order_No={order_no.get()};',
+            f'UPDATE cash_core.repayment_plan_detail SET  due_time=due_time-86400*{overduedays_var.get()} where loan_id in '
+            f'(select id from cash_core.`loan` where order_No = {order_no.get()});',
+            f'UPDATE cash_order.orders as o SET o.loan_time=o.loan_time-86400*{overduedays_var.get()} WHERE o.order_no={order_no.get()};'
+        ]
+        for sql in sqls:
+            mysql_modify(db, sql)
+        select_sql = f'select id from cash_core.`loan` where order_No = {order_no.get()};'
+        mysql_select(db, select_sql)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
+
+
+def order_overdue_sql2():
+    """向后修改到期日"""
+    if len(order_no.get()) == 15 and len(overduedays_var.get()) > 0:
+        db = mysql_connect()
+        sqls = [
+            f'DELETE FROM `cash_core`.`day_order_acc` WHERE `loan_id` in (select id from cash_core.`loan` '
+            f'where order_No ={order_no.get()});',
+            f'UPDATE cash_core.`loan` SET loan_time =loan_time+86400*{overduedays_var.get()} where order_No={order_no.get()};',
+            f'UPDATE cash_core.repayment_plan_detail SET  due_time=due_time+86400*{overduedays_var.get()} where loan_id in '
+            f'(select id from cash_core.`loan` where order_No = {order_no.get()});',
+            f'UPDATE cash_order.orders as o SET o.loan_time=o.loan_time+86400*{overduedays_var.get()} WHERE o.order_no={order_no.get()};'
+        ]
+        for sql in sqls:
+            mysql_modify(db, sql)
+        select_sql = f'select id from cash_core.`loan` where order_No = {order_no.get()};'
+        mysql_select(db, select_sql)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
 
 
 def order_overdue_ssh():
@@ -348,10 +466,49 @@ def create_button(master, text, command, row, column, width=30, sticky='ew'):
 
 def script():
     """查看脚本"""
+    scripts['uatas还款拉取'] = f"php /home/rong/www/time-pay/webroot/batch.php TimePayRepay PollingRepayResult " \
+                           f"--orderNo='{order_no_entry.get()}' --payHandel='UP'"
+    scripts["用户storage目录查询"] = f'php -r "echo crc32({order_no_entry.get()}) % 10;"'
     if script_var.get() in scripts.keys():
         show_lb['text'] = scripts[script_var.get()]
     else:
         show_lb['text'] = '输入错误'
+
+
+def view_request_parameters():
+    """查看请求参数"""
+    if rc_op_var.get() in rc_request_dict.keys():
+        data_encrypt_text.delete(1.0, tk.END)
+        data_encrypt_text.insert(tk.INSERT, rc_request_dict[rc_op_var.get()][1])
+
+
+def request_interface():
+    """请求接口"""
+    url = rc_request_dict[rc_op_var.get()][0]
+    data = data_encrypt_text.get(1.0, tk.END)
+    # print(url, data)
+    try:
+        result = requests.post(url, data)
+        html = result.text
+        show_lb['text'] = html
+    except:
+        show_lb['text'] = '请求接口失败'
+
+
+def check_oppo_order():
+    db = mysql_connect()
+    sql = f'SELECT l.partner_loan_id,l.`status`,FROM_UNIXTIME(l.create_time) FROM cash_partner_pay.loan as l WHERE ' \
+          f'l.partner_loan_id in ({data_encrypt_text.get(1.0, tk.END)});'
+    mysql_select(db, sql)
+    ssh_sever_end()
+
+
+def modify_oppo_order():
+    db = mysql_connect()
+    sql = f'UPDATE cash_partner_pay.loan as l SET l.create_time=UNIX_TIMESTAMP(NOW())-86400*3 ' \
+          f'WHERE l.partner_loan_id in ({data_encrypt_text.get(1.0, tk.END)});'
+    mysql_modify(db, sql)
+    ssh_sever_end()
 
 
 if __name__ == '__main__':
@@ -398,21 +555,24 @@ if __name__ == '__main__':
     machine_status_bt = create_button(root, text='订单过机审', command=modify_machine_status, row=row, column=column + 2)
     # 订单改为待重新放款
     reloan_bt = create_button(root, text='订单待重新放款', command=order_change_reloan, row=row, column=column + 3)
-    # 订单逾期sql
-    order_overdue_bt = create_button(root, text='订单逾期', command=order_overdue_sql, row=row, column=column + 4)
-    # 订单逾期脚本
-    # order_overdue_ssh_bt = tk.Button(frame03, text='订单逾期脚本', command=order_overdue_ssh)
-    # order_overdue_ssh_bt.pack(side='left')
 
-    # 根据uid查询在storage哪个表
+    """修改订单到期日"""
+    row = row + 1
+    modify_duedays_lb = tk.Label(root, text='到期日向前/向后移动()天')
+    modify_duedays_lb.grid(row=row, column=column + 1)
+    overduedays_var = tk.StringVar()
+    overdueday_entry = tk.Entry(root, text=overduedays_var)
+    overdueday_entry.grid(row=row, column=column + 2, sticky='ew')
+    # 订单逾期sql
+    order_overdue_bt = create_button(root, text='向前修改到期日(逾期)', command=order_overdue_sql1, row=row, column=column + 3)
+    order_overdue_bt = create_button(root, text='向后修改到期日', command=order_overdue_sql2, row=row, column=column + 4)
+
+    """oppo订单查看修改"""
+    row = row + 1
+    create_button(root, text='查看oppo订单信息', command=check_oppo_order, row=row, column=column + 1)
+    create_button(root, text='修改oppo订单创建时间', command=modify_oppo_order, row=row, column=column + 2)
 
     """加解密输入行"""
-    row = row + 1
-    # 加解密数据输入
-    # data_encrypt_var = tk.StringVar(root)
-    # data_encrypt_entry = tk.Entry(root, text=data_encrypt_var, width=100)
-    # data_encrypt_entry.grid(row=row, column=column + 1, columnspan=5)
-
     row = row + 1
     data_encrypt_text = tk.Text(root, width=120, height=4)
     data_encrypt_text.grid(row=row, column=column, columnspan=5)
@@ -421,7 +581,7 @@ if __name__ == '__main__':
     row = row + 1
     encrypt_lb = tk.Label(root, text='待加解密数据↑')
     encrypt_lb.grid(row=row, column=column + 1)
-    encrypt_var = tk.StringVar(value=encrypt_list[0][0])
+    encrypt_var = tk.StringVar(value="请选择加解密方式")
     encrypt_op = tk.OptionMenu(root, encrypt_var, *encrypt_dict.keys())
     encrypt_op.grid(row=row, column=column + 2, sticky='ew')
     encrypt_bt = create_button(root, text='加解密', command=data_encrypt, row=row, column=column + 3)
@@ -500,6 +660,14 @@ if __name__ == '__main__':
     copy_bt = create_button(root, text='复制', command=copy, row=row, column=column + 3)
     # 清空按钮
     clear_bt = create_button(root, text='清空', command=clear_data, row=row, column=column + 4)
+
+    """模拟风控请求"""
+    row += 1
+    rc_op_var = tk.StringVar(value="选择请求")
+    rc_op = tk.OptionMenu(root, rc_op_var, *rc_request_dict.keys())
+    rc_op.grid(row=row, column=column + 1, sticky='ew')
+    check_bt = create_button(root, text='查看请求参数', command=view_request_parameters, row=row, column=column + 2)
+    request_interface_bt = create_button(root, text='请求接口', command=request_interface, row=row, column=column + 3)
 
     """展示行"""
     row = row + 1
