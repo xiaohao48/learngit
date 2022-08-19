@@ -36,10 +36,11 @@ squ_size = [rows, columns]
 gridCell_label = []
 score = 0
 max_num = 2048
-can_merge = False
+can_merge = True
 row_var = 0
 column_var = 0
 max_num_var = 0
+is_over = False
 
 
 def create_widget():
@@ -53,7 +54,7 @@ def init_page():
     # root.geometry('300x300+100+100')
     max_num_lb = tk.Label(start_frame, text='合成最大值：')
     max_num_lb.pack()
-    max_num_var = tk.StringVar(value=8)
+    max_num_var = tk.StringVar(value=2048)
     max_num_entry = tk.Entry(start_frame, text=max_num_var)
     max_num_entry.pack()
     row_lb = tk.Label(start_frame, text='游戏区域行数：')
@@ -83,21 +84,20 @@ def start_game():
 
 
 def confirm_game():
-    global rows, columns, max_num, gridCell_num, score
+    global rows, columns, max_num, gridCell_num, score, gridCell_label
     score = 0
     rows = int(row_var.get())
     columns = int(column_var.get())
     max_num = int(max_num_var.get())
     gridCell_num = [[0] * columns for n in range(rows)]
+    gridCell_label = []
     start_frame.pack_forget()
     game_frame.pack()
-    # print(rows,columns,max_num)
     start_game()
 
 
 def create_squ(master):
     """使用label创建游戏区域"""
-    print(rows, columns, max_num)
     for row in range(rows):
         row_cells = []
         for column in range(columns):
@@ -108,33 +108,34 @@ def create_squ(master):
 
 
 def random_num():
+    global is_over
     random_cells = []
     for row in range(rows):
         for column in range(columns):
             if gridCell_num[row][column] == 0:
                 random_cells.append((row, column))
-    if random_cells != []:
+    if len(random_cells) > 0:
         random_cell = random.choice(random_cells)
         random_text = random.choice([2, 4])
         gridCell_num[random_cell[0]][random_cell[1]] = random_text
-        print('row=' + str(random_cell[0]),
-              'columu=' + str(random_cell[1]),
-              'random_text=' + str(random_text),
-              'lineno=' + str(sys._getframe().f_lineno))
+        # print('row=' + str(random_cell[0]),
+        #       'columu=' + str(random_cell[1]),
+        #       'random_text=' + str(random_text),
+        #       'lineno=' + str(sys._getframe().f_lineno))
+    # elif random_cells == []:
     else:
-        messagebox.showinfo(title='提示', message='Game over!')
+        # messagebox.showinfo(title='提示', message='Game over!')
+        is_over = True
 
 
 def show_num():
     """展示数字颜色"""
-    # print(gridCell_num)
     for row in range(rows):
         for column in range(columns):
             if gridCell_num[row][column] != 0:
                 gridCell_label[row][column].config(bg=bg_color[str(gridCell_num[row][column])],
                                                    fg=fg_color[str(gridCell_num[row][column])],
                                                    text=gridCell_num[row][column])
-                print(gridCell_label[row][column]["text"])
             else:
                 gridCell_label[row][column].config(bg='azure4', text='')
 
@@ -164,8 +165,9 @@ def move(event):
 
     random_num()
     show_num()
-
     endGame()
+    # if is_over == True:
+    #     endGame()
 
     print(f'分数={score}')
 
@@ -181,7 +183,6 @@ def compressGridLevel():
                 compressedCell[row][compressed_column] = gridCell_num[row][column]
                 compressed_column += 1
     gridCell_num = compressedCell
-    # print(gridCell_num)
 
 
 def compressGridVertical():
@@ -201,7 +202,6 @@ def transposeToVertical():
     """水平转竖直"""
     global gridCell_num
     transposeCell = [[0] * rows for i in range(columns)]
-    # print(transposeCell)
     for row in range(rows):
         for column in range(columns):
             transposeCell[column][row] = gridCell_num[row][column]
@@ -254,7 +254,7 @@ def mergeGridVertical():
 def endGame():
     for row in range(rows):
         for column in range(columns):
-            if can_merge is False or gridCell_num[row][column] == max_num:
+            if gridCell_num[row][column] == max_num or is_over is True:
                 messagebox.showinfo(title='提示', message=f'游戏结束，最高分{score}')
                 game_frame.pack_forget()
                 start_frame.pack()
