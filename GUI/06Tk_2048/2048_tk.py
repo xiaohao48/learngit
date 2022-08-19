@@ -34,26 +34,74 @@ rows = 3
 columns = 5
 squ_size = [rows, columns]
 gridCell_label = []
-gridCell_num = [[0] * columns for n in range(rows)]
 score = 0
 max_num = 2048
 can_merge = False
+row_var = 0
+column_var = 0
+max_num_var = 0
 
 
 def create_widget():
-    create_squ()  # 创建游戏区域
+    init_page()
+    # start_game()
+    # create_squ(game_frame)  # 创建游戏区域
+
+
+def init_page():
+    global row_var, column_var, max_num_var, max_score_show_lb
+    # root.geometry('300x300+100+100')
+    max_num_lb = tk.Label(start_frame, text='合成最大值：')
+    max_num_lb.pack()
+    max_num_var = tk.StringVar(value=8)
+    max_num_entry = tk.Entry(start_frame, text=max_num_var)
+    max_num_entry.pack()
+    row_lb = tk.Label(start_frame, text='游戏区域行数：')
+    row_lb.pack()
+    row_var = tk.StringVar(value=4)
+    row_entry = tk.Entry(start_frame, text=row_var)
+    row_entry.pack()
+    column_lb = tk.Label(start_frame, text='游戏区域列数：')
+    column_lb.pack()
+    column_var = tk.StringVar(value=4)
+    column_entry = tk.Entry(start_frame, text=column_var)
+    column_entry.pack()
+    max_score_lb = tk.Label(start_frame, text='游戏最高分:')
+    max_score_lb.pack()
+    max_score_show_lb = tk.Label(start_frame, text=score, bg='yellow')
+    max_score_show_lb.pack()
+    confirm_bt = tk.Button(start_frame, text='确定', command=confirm_game)
+    confirm_bt.pack()
+
+
+def start_game():
+    create_squ(game_frame)  # 创建游戏区域
     random_num()  # 初始化随机生成1个数字
     random_num()  # 初始化随机生成1个数字
     show_num()  # 展示数字
     root.bind('<Key>', move)  # 移动操作
 
 
-def create_squ():
+def confirm_game():
+    global rows, columns, max_num, gridCell_num, score
+    score = 0
+    rows = int(row_var.get())
+    columns = int(column_var.get())
+    max_num = int(max_num_var.get())
+    gridCell_num = [[0] * columns for n in range(rows)]
+    start_frame.pack_forget()
+    game_frame.pack()
+    # print(rows,columns,max_num)
+    start_game()
+
+
+def create_squ(master):
     """使用label创建游戏区域"""
+    print(rows, columns, max_num)
     for row in range(rows):
         row_cells = []
         for column in range(columns):
-            label = tk.Label(root, text='', bg='azure4', font=('arial', 22), width=4, height=2)
+            label = tk.Label(master, text='', bg='azure4', font=('arial', 22), width=4, height=2)
             label.grid(row=row, column=column, padx=5, pady=5)
             row_cells.append(label)
         gridCell_label.append(row_cells)
@@ -69,36 +117,30 @@ def random_num():
         random_cell = random.choice(random_cells)
         random_text = random.choice([2, 4])
         gridCell_num[random_cell[0]][random_cell[1]] = random_text
-        # print('row=' + str(random_cell[0]),
-        #       'columu=' + str(random_cell[1]),
-        #       'random_text=' + str(random_text),
-        #       'lineno=' + str(sys._getframe().f_lineno))
+        print('row=' + str(random_cell[0]),
+              'columu=' + str(random_cell[1]),
+              'random_text=' + str(random_text),
+              'lineno=' + str(sys._getframe().f_lineno))
     else:
         messagebox.showinfo(title='提示', message='Game over!')
 
 
 def show_num():
     """展示数字颜色"""
+    # print(gridCell_num)
     for row in range(rows):
         for column in range(columns):
             if gridCell_num[row][column] != 0:
                 gridCell_label[row][column].config(bg=bg_color[str(gridCell_num[row][column])],
                                                    fg=fg_color[str(gridCell_num[row][column])],
                                                    text=gridCell_num[row][column])
+                print(gridCell_label[row][column]["text"])
             else:
                 gridCell_label[row][column].config(bg='azure4', text='')
 
 
 def move(event):
-    derictions = {
-        'Up': "print('up')",
-        'Down': "print('down')",
-        'Left': "left",
-        'Right': "print('right')",
-    }
-    # sys._getframe().f_lineno
     pressed_key = event.keysym
-    # print(pressed_key, sys._getframe().f_lineno)
     if pressed_key == 'Left':
         compressGridLevel()
         mergeGridLevel()
@@ -200,7 +242,6 @@ def mergeGridLevel():
 
 def mergeGridVertical():
     global score, can_merge
-    # can_merge = False
     for row in range(columns):
         for column in range(rows - 1):
             if gridCell_num[row][column] == gridCell_num[row][column + 1]:
@@ -213,8 +254,11 @@ def mergeGridVertical():
 def endGame():
     for row in range(rows):
         for column in range(columns):
-            if can_merge == False or gridCell_num[row][column] == max_num:
+            if can_merge is False or gridCell_num[row][column] == max_num:
                 messagebox.showinfo(title='提示', message=f'游戏结束，最高分{score}')
+                game_frame.pack_forget()
+                start_frame.pack()
+                max_score_show_lb['text'] = score
                 break
 
 
@@ -222,5 +266,8 @@ if __name__ == '__main__':
     root = tk.Tk()
     # root.geometry('500x300+100+100')
     root.title('Game_2048 V1.0.1')
+    start_frame = tk.Frame(root)
+    start_frame.pack()
+    game_frame = tk.Frame(root)
     create_widget()
     root.mainloop()
