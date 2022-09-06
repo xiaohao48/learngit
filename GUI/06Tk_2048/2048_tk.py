@@ -41,6 +41,7 @@ row_var = 0
 column_var = 0
 max_num_var = 0
 is_over = False
+merge_over = False
 
 
 def create_widget():
@@ -126,6 +127,7 @@ def random_num():
     else:
         # messagebox.showinfo(title='提示', message='Game over!')
         is_over = True
+        return is_over
 
 
 def show_num():
@@ -229,7 +231,8 @@ def leftToRight():
 
 
 def mergeGridLevel():
-    global score, can_merge
+    """水平移动"""
+    global score, can_merge, merge_level_over
     # can_merge = False
     for row in range(rows):
         for column in range(columns - 1):
@@ -237,29 +240,41 @@ def mergeGridLevel():
                 gridCell_num[row][column] *= 2
                 gridCell_num[row][column + 1] = 0
                 score += gridCell_num[row][column]
-                can_merge = True
+                # can_merge = True
+            else:
+                merge_level_over = True
+                # return merge_level_over
 
 
 def mergeGridVertical():
-    global score, can_merge
+    """竖直移动"""
+    global score, can_merge, merge_vertical_over
     for row in range(columns):
         for column in range(rows - 1):
             if gridCell_num[row][column] == gridCell_num[row][column + 1]:
                 gridCell_num[row][column] *= 2
                 gridCell_num[row][column + 1] = 0
                 score += gridCell_num[row][column]
-                can_merge = True
+                # can_merge = True
+            else:
+                merge_vertical_over = True
+                # return merge_vertical_over
 
 
 def endGame():
     for row in range(rows):
         for column in range(columns):
-            if gridCell_num[row][column] == max_num or is_over is True:
+            if gridCell_num[row][column] == max_num:  # or (is_over is True and merge_over is True):
                 messagebox.showinfo(title='提示', message=f'游戏结束，最高分{score}')
                 game_frame.pack_forget()
                 start_frame.pack()
                 max_score_show_lb['text'] = score
                 break
+    if is_over is True and merge_level_over is True and merge_vertical_over is True:
+        messagebox.showinfo(title='提示', message=f'游戏结束，最高分{score}')
+        game_frame.pack_forget()
+        start_frame.pack()
+        max_score_show_lb['text'] = score
 
 
 if __name__ == '__main__':
