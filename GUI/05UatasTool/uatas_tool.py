@@ -170,6 +170,18 @@ def mock_cloudun_callback(order_no, system_choose, loan_level, user_level):
         show_lb['text'] = '请输入订单号'
 
 
+def modify_order_ctime(order_no, system_choose):
+    """修改订单创建时间"""
+    if len(order_no) == 15:
+        db = mysql_connect(system_choose)
+        sql = f'UPDATE cash_order.orders as o SET o.create_time=FROM_UNIXTIME(UNIX_TIMESTAMP(o.create_time)-3600) ' \
+              f'WHERE o.order_no={order_no};'
+        mysql_modify(db, sql, order_no)
+        ssh_sever_end()
+    else:
+        show_lb['text'] = '请输入订单号'
+
+
 def control_request(order_no):
     """订单请求风控"""
     if len(order_no) == 15:
@@ -413,9 +425,10 @@ def view_request_parameters(request_choose, data_request):
         data_request.insert(tk.INSERT, rc_request_dict[request_choose.get()][1])
 
 
-def request_interface(request_choose, order_no, data_request):
+def request_interface(request_choose, order_no, data_request, system_choose):
     """请求接口"""
     if request_choose in ["测试uatas请求风控", "测试uatasfly请求风控", "测试finplus请求风控"] and len(order_no) == 15:
+        modify_order_ctime(order_no, system_choose)
         rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % (order_no)}
         url = rc_request_dict[request_choose][0]
         data = rc_request_dict[request_choose][1]
@@ -590,7 +603,8 @@ if __name__ == '__main__':
     # 请求接口
     request_interface_bt = create_button(root, text='请求接口',
                                          command=lambda: request_interface(req_op_var.get(), order_no_var.get(),
-                                                                           data_encrypt_text.get(1.0, tk.END)),
+                                                                           data_encrypt_text.get(1.0, tk.END),
+                                                                           system_var.get()),
                                          row=row, column=column + 3)
 
     """展示行"""
