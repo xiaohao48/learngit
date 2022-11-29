@@ -7,6 +7,8 @@ import paramiko
 import pyperclip
 import sys
 import time
+from requests.auth import HTTPBasicAuth
+import base64
 
 risk_loan_level = ['LEVEL_ONE', 'LEVEL_TWO', 'LEVEL_THREE']
 user_level = ['L-0', 'L-1']
@@ -45,36 +47,45 @@ scripts = {
 }
 # 前后端加解密key
 encrypt_dict = {
-    'zeus前端加密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 1},
-    'zeus前端解密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 2},
-    'zeus后端加密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 1},
-    'zeus后端解密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 2},
+    # 'zeus前端加密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 1},
+    # 'zeus前端解密': {'key': 'Ckgx3U1QufHbcQns', 'iv': 'so8RhHi4jkaci4ze', 'way': 2},
+    # 'zeus后端加密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 1},
+    # 'zeus后端解密': {'key': '93LJ7sxQALXuMgLj', 'iv': 'jlsfjiosmhosl5db', 'way': 2},
     'uatas前端加密': {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 1},
     'uatas前端解密': {'key': 'daDtbXYkhhnHi1XF', 'iv': 'H9Rlows19wkBSx3w', 'way': 2},
     'uatas后端加密': {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 1},
     'uatas后端解密': {'key': 'z1aXNVB4JJw4ZZ0r', 'iv': 'LzsCmdfFbAvQ1fbD', 'way': 2}
 }
 # post请求列表
+request_list = {
+    "uatas": ["http://test-rc.uatas.id", "http://test-api.uatas.id"],
+    "uatasfly": ["https://test-rc.modalandalan.site", "http://test-api.modalandalan.site"],
+    "finplus": ["http://test-rc.finplusid.com", "http://test-api.finplusid.com"],
+}
 rc_request_dict = {
-    "测试uatas请求风控": ["http://test-rc.uatas.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    # "正式uatas请求风控": ["http://rc.uatas.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    "测试uatasfly请求风控": ["https://test-rc.modalandalan.site/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    # "正式uatasFly请求风控": ["http://rc.modalandalan.site/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    "测试finplus请求风控": ["http://test-rc.finplusid.com/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    # "正式finplus请求风控": ["https://rc.finplus.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
-    "测试uatas设备信息": [
-        "http://test-api.uatas.id/api/thirdapi/getdeviceinfo",
+    "请求风控": ["/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    "设备信息": [
+        "/api/thirdapi/getdeviceinfo",
         '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
+    # "测试uatas请求风控": ["http://test-rc.uatas.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "正式uatas请求风控": ["http://rc.uatas.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "测试uatasfly请求风控": ["https://test-rc.modalandalan.site/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "正式uatasFly请求风控": ["http://rc.modalandalan.site/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "测试finplus请求风控": ["http://test-rc.finplusid.com/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "正式finplus请求风控": ["https://rc.finplus.id/rc/check", {"data": "{\"order_no\": \"276688849607429\" }"}],
+    # "测试uatas设备信息": [
+    # "http://test-api.uatas.id/api/thirdapi/getdeviceinfo",
+    # '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     # "正式uatas设备信息": ["http://api.uatas.id/api/thirdapi/getdeviceinfo",
     # '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
-    "测试uatasfly设备信息": [
-        "http://test-api.modalandalan.site/api/thirdapi/getdeviceinfo",
-        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
+    # "测试uatasfly设备信息": [
+    # "http://test-api.modalandalan.site/api/thirdapi/getdeviceinfo",
+    # '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     # "正式uatasfly设备信息": ["http://api.modalandalan.site/api/thirdapi/getdeviceinfo",
     #                    '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
-    "测试finplus设备信息": [
-        "http://test-api.finplusid.com/api/thirdapi/getdeviceinfo",
-        '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
+    # "测试finplus设备信息": [
+    # "http://test-api.finplusid.com/api/thirdapi/getdeviceinfo",
+    # '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     # "正式finplus设备信息": ["http://api.finplus.id/api/thirdapi/getdeviceinfo",
     #                   '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     "moneypay放款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
@@ -82,7 +93,19 @@ rc_request_dict = {
     "moneypay还款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
                    '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
     "monetapay还款": ["http://sandbox-api.monetapay.net/simulation/payForVa",
-                    '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}']
+                    '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'],
+    "instamoney bank还款": [
+        'https://api.instamoney.co/p2p-escrow-virtual-accounts/testing-payments',
+        '{"external_id": "846ba2bc_03c6331a434acd5b","amount": "1683490.00"}',
+        'sk_test_a4pgdm8dBr5xJvGDYpC0JTxC1sq530nmSnknXco1nb94ADrEGEqtfE0JkBa5Zz0',  # Username
+        'ZHNhZHNhY3N4Y1pjYXM'  # Password
+    ],
+    "instamoney OTC还款": [
+        'https://api.instamoney.co/fixed_payment_code/simulate_payment',
+        '{"retail_outlet_name":"ALFAMART","payment_code":"TEST817586","transfer_amount":684356}',
+        'sk_test_YYiLRZXuKQd6PsshmdIOXdpIHXqwf2QWNR09mK7JWLPqL2vzSh1QIu0eR0vURg2',  # Username
+        '0ef77229ae1a4aba2e97bb5881660941724ec3ae8858ce287b879452544313c4'  # Password
+    ]
 }
 # 模拟cloudun回调地址
 cloudun_url = {
@@ -208,7 +231,7 @@ def ssh_sever_start(system_choose):
     """跳板服务开启"""
     global ssh_sever
     ssh_sever = SSHTunnelForwarder(
-        ('jump-sz1.toolscash.top', 22202),
+        ('jump-sz3.toolscash.top', 22202),
         ssh_password='jqeVwuIdoc27bkcg',
         ssh_username='xiaohao',
         remote_bind_address=(db_mysql[system_choose][0], 3306)
@@ -427,21 +450,69 @@ def view_request_parameters(request_choose, data_request):
 
 def request_interface(request_choose, order_no, data_request, system_choose):
     """请求接口"""
-    if request_choose in ["测试uatas请求风控", "测试uatasfly请求风控", "测试finplus请求风控"] and len(order_no) == 15:
+    if request_choose == "请求风控" and len(order_no) == 15:
         modify_order_ctime(order_no, system_choose)
         rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % (order_no)}
+        url = request_list[system_choose][0] + rc_request_dict[request_choose][0]
+        data = rc_request_dict[request_choose][1]
+        try:
+            result = requests.post(url, data)
+            print(url, data, result)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = '请求接口失败'
+    elif request_choose == "设备信息":
+        url = request_list[system_choose][1] + rc_request_dict[request_choose][0]
+        data = data_request
+        try:
+            result = requests.post(url, data)
+            print(url, data, result)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = '请求接口失败'
+    elif request_choose == 'instamoney bank还款':
         url = rc_request_dict[request_choose][0]
         data = rc_request_dict[request_choose][1]
+        auth = str(base64.b64encode(
+            f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
+        headers = {
+            "Content-Type": "application/json",
+            'Authorization': f'Basic {auth}',
+        }
+        try:
+            result = requests.post(url, data, headers=headers, proxies=proxies)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = '请求接口失败'
+    elif request_choose == 'instamoney OTC还款':
+        url = rc_request_dict[request_choose][0]
+        data = rc_request_dict[request_choose][1]
+        auth = str(base64.b64encode(
+            f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
+        headers = {
+            "Content-Type": "application/json",
+            'Authorization': f'Basic {auth}',
+        }
+        # print(url,data,auth,headers)
+        try:
+            result = requests.post(url, data, headers=headers, proxies=proxies)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = '请求接口失败'
     else:
-        rc_request_dict[request_choose][1] = data_request
         url = rc_request_dict[request_choose][0]
         data = data_request
-    try:
-        result = requests.post(url, data)
-        html = result.text
-        show_lb['text'] = html
-    except:
-        show_lb['text'] = '请求接口失败'
+        try:
+            result = requests.post(url, data)
+            print(url, data, result)
+            html = result.text
+            show_lb['text'] = html
+        except:
+            show_lb['text'] = '请求接口失败'
 
 
 def check_oppo_order(order_no, system_choose):
@@ -567,7 +638,7 @@ if __name__ == '__main__':
     encrypt_lb = tk.Label(root, text='待加解密数据↑')
     encrypt_lb.grid(row=row, column=column + 1)
     # 加密方式
-    encrypt_var = tk.StringVar(value="请选择加解密方式")
+    encrypt_var = tk.StringVar(value="uatas后端解密")
     encrypt_op = tk.OptionMenu(root, encrypt_var, *encrypt_dict.keys())
     encrypt_op.grid(row=row, column=column + 2, sticky='ew')
     # 前后端加解密
@@ -593,7 +664,7 @@ if __name__ == '__main__':
     """模拟请求"""
     row += 1
     # 请求选择
-    req_op_var = tk.StringVar(value="选择请求")
+    req_op_var = tk.StringVar(value="请求风控")
     req_op = tk.OptionMenu(root, req_op_var, *rc_request_dict.keys())
     req_op.grid(row=row, column=column + 1, sticky='ew')
     # 查看请求参数
