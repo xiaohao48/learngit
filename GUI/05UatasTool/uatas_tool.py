@@ -474,7 +474,7 @@ def request_interface(request_choose, order_no, data_request, system_choose):
             show_lb['text'] = '请求接口失败'
     elif request_choose == 'instamoney bank还款':
         url = rc_request_dict[request_choose][0]
-        data = rc_request_dict[request_choose][1]
+        data = data_request
         auth = str(base64.b64encode(
             f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
         headers = {
@@ -489,14 +489,13 @@ def request_interface(request_choose, order_no, data_request, system_choose):
             show_lb['text'] = '请求接口失败'
     elif request_choose == 'instamoney OTC还款':
         url = rc_request_dict[request_choose][0]
-        data = rc_request_dict[request_choose][1]
+        data = data_request
         auth = str(base64.b64encode(
             f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
         headers = {
             "Content-Type": "application/json",
             'Authorization': f'Basic {auth}',
         }
-        # print(url,data,auth,headers)
         try:
             result = requests.post(url, data, headers=headers, proxies=proxies)
             html = result.text
