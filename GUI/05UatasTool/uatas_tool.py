@@ -1,3 +1,4 @@
+import ast
 import tkinter as tk
 import requests
 import json
@@ -89,11 +90,11 @@ rc_request_dict = {
     # "正式finplus设备信息": ["http://api.finplus.id/api/thirdapi/getdeviceinfo",
     #                   '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     "moneypay放款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
-                   '{"order_type":"loan","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
+                     '{"order_type":"loan","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
     "moneypay还款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
-                   '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
+                     '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
     "monetapay还款": ["http://sandbox-api.monetapay.net/simulation/payForVa",
-                    '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'],
+                      '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'],
     "instamoney bank还款": [
         'https://api.instamoney.co/p2p-escrow-virtual-accounts/testing-payments',
         '{"external_id": "846ba2bc_03c6331a434acd5b","amount": "1683490.00"}',
@@ -105,13 +106,34 @@ rc_request_dict = {
         '{"retail_outlet_name":"ALFAMART","payment_code":"TEST817586","transfer_amount":684356}',
         'sk_test_YYiLRZXuKQd6PsshmdIOXdpIHXqwf2QWNR09mK7JWLPqL2vzSh1QIu0eR0vURg2',  # Username
         '0ef77229ae1a4aba2e97bb5881660941724ec3ae8858ce287b879452544313c4'  # Password
-    ]
-}
-# 模拟cloudun回调地址
-cloudun_url = {
-    "uatas": "http://test-rc.uatas.id/rc/decisions/cloudun",
-    "uatasfly": "http://test-rc.modalandalan.site/rc/decisions/cloudun",
-    "finplus": "http://test-rc.finplusid.com/rc/decisions/cloudun"
+    ],
+    "cloudun_AES加密": [
+        "https://tool.lmeee.com/jiami/crypt128inter",
+        """{'mode': 'CBC',
+        'padding': 'pkcs5',
+        'block': '128',
+        'password': 'uaRZnvZoJZ8KSTuE',
+        'iv': 'IFwDpMo01xY05ovH',
+        'encode': 'base64',
+        'way': '1',
+        'text': '{"code":0,"data":{"code":200,"feature_list":[{"featureValue":334.0,"featureName":"model_reb_score_v2_s2","featureType":"number"}],"forbidApplyUntil":1647746861000,"loan_type":0,"order_no":"274540645167919","partner_id":9000,"passed":"false","risk_amount":"0","risk_loan_level":"LEVEL_THREE","sign":"4e32c73dafe476209843fd916a5cccb0","user_idcard":"1141210809980028","user_level":"L-1","user_name":"twentyseven","user_phone":"82112341028","zeus_order_no":"274540645167919"},"msg":""}',
+        'method': 'aes'}"""
+    ],
+    "plan_AES加密": [
+        "https://tool.lmeee.com/jiami/crypt128inter",
+        """{'mode': 'CBC',
+        'padding': 'pkcs5',
+        'block': '128',
+        'password': 'uaRZnvZoJZ8KSTuE',
+        'iv': 'IFwDpMo01xY05ovH',
+        'encode': 'base64',
+        'way': '1',
+        'text': '{"code":0,"data":{"error_code":0,"is_defer":0,"model_id":"a6_new_v6","model_indicators":{},"model_offset":0,"model_per":"0.5000","order_no":"279551347234503","rule_name":"","score":460,"strategy_id":"uatas_super_20220409","uatas_new_user":1}}',
+        'method': 'aes'}"""
+    ],
+    "cloudun模拟回调": ["/rc/decisions/cloudun", '{"data":""}'],
+    "plan模拟回调": ["/rc/decisions/plan", '{"data":""}']
+
 }
 # 数据库账号密码
 db_mysql = {
@@ -181,7 +203,7 @@ def aes_rc(order_no, system_choose, loan_level, user_level):
 def mock_cloudun_callback(order_no, system_choose, loan_level, user_level):
     """模拟cloudun风控回调"""
     if len(order_no) == 15:
-        url = cloudun_url[system_choose]
+        url = request_list[system_choose][0] + '/rc/decisions/cloudun'
         data = json.dumps({"data": "%s" % (aes_rc(order_no, system_choose, loan_level, user_level))})
         try:
             result = requests.post(url, data, proxies=proxies)
@@ -216,7 +238,6 @@ def control_request(order_no):
         # ssh_sever_end()
         url = 'http://test-rc.uatas.id/rc/check'
         data = {'data': '{"order_no": "%s" }' % order_no}
-        print(data)
         try:
             result = requests.post(url, data)
             html = result.text
@@ -389,23 +410,17 @@ def order_overdue_ssh():
     # stdin, stdout, stderr = connection.exec_command(command)
 
     # loginInfo = channel.recv(1024).decode('utf-8')
-    # print(loginInfo)
     # command = 'df -h'
     # stdin, stdout, stderr = connection.exec_command(command)
-    # print(stdout.read().decode('utf-8'))
     channel.close()
     connection.close()
 
     # trans = paramiko.Transport(('jump-sz1.toolscash.top', 22203))
-    # print(trans , str(sys._getframe().f_lineno))
     # # trans.start_client()
     # trans.auth_password(username='xiaohao', password='rOub8bWwc3mxhpjj')
     # channel = trans.open_session(11)
-    # print(channel)
     # channel.get_pty()
     # a = channel.invoke_shell()
-    # print(a)
-    # print(channel.recv(65535).decode('utf-8'))
     #
     # channel.close()
     # trans.close()
@@ -433,7 +448,7 @@ def create_button(master, text, command, row, column, width=30, sticky='ew'):
 def script(script_select, order_no):
     """查看脚本"""
     scripts['uatas还款拉取'] = f"php /home/rong/www/time-pay/webroot/batch.php TimePayRepay PollingRepayResult " \
-                           f"--orderNo='{order_no}' --payHandel='UP'"
+                               f"--orderNo='{order_no}' --payHandel='UP'"
     scripts["用户storage目录查询"] = f'php -r "echo crc32({order_no}) % 10;"'
     if script_select in scripts.keys():
         show_lb['text'] = scripts[script_select]
@@ -448,54 +463,24 @@ def view_request_parameters(request_choose, data_request):
         data_request.insert(tk.INSERT, rc_request_dict[request_choose.get()][1])
 
 
-def request_interface(request_choose, order_no, data_request, system_choose):
-    """请求接口"""
-    if request_choose == "请求风控" and len(order_no) == 15:
-        modify_order_ctime(order_no, system_choose)
-        rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % (order_no)}
-        url = request_list[system_choose][0] + rc_request_dict[request_choose][0]
-        data = rc_request_dict[request_choose][1]
+def url_request(url, data, url_type, headers):
+    """接口请求"""
+    if url_type == 1:
         try:
             result = requests.post(url, data)
-            print(url, data, result)
             html = result.text
             show_lb['text'] = html
         except:
             show_lb['text'] = '请求接口失败'
-    elif request_choose == "设备信息":
-        url = request_list[system_choose][1] + rc_request_dict[request_choose][0]
-        data = data_request
+    elif url_type == 2:
         try:
-            result = requests.post(url, data)
-            print(url, data, result)
+            result = requests.post(url=url, data=data, proxies=proxies)
             html = result.text
-            show_lb['text'] = html
+            encrypt_date = json.loads(html)['d']['r']
+            show_lb['text'] = encrypt_date
         except:
             show_lb['text'] = '请求接口失败'
-    elif request_choose == 'instamoney bank还款':
-        url = rc_request_dict[request_choose][0]
-        data = data_request
-        auth = str(base64.b64encode(
-            f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
-        headers = {
-            "Content-Type": "application/json",
-            'Authorization': f'Basic {auth}',
-        }
-        try:
-            result = requests.post(url, data, headers=headers, proxies=proxies)
-            html = result.text
-            show_lb['text'] = html
-        except:
-            show_lb['text'] = '请求接口失败'
-    elif request_choose == 'instamoney OTC还款':
-        url = rc_request_dict[request_choose][0]
-        data = data_request
-        auth = str(base64.b64encode(
-            f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
-        headers = {
-            "Content-Type": "application/json",
-            'Authorization': f'Basic {auth}',
-        }
+    elif url_type == 3:
         try:
             result = requests.post(url, data, headers=headers, proxies=proxies)
             html = result.text
@@ -503,15 +488,62 @@ def request_interface(request_choose, order_no, data_request, system_choose):
         except:
             show_lb['text'] = '请求接口失败'
     else:
+        show_lb['text'] = '请求接口失败'
+
+
+def request_interface(request_choose, order_no, data_request, system_choose):
+    """请求接口按钮"""
+    if request_choose in list(rc_request_dict.keys())[0:1] and len(order_no) == 15:
+        """请求风控"""
+        modify_order_ctime(order_no, system_choose)
+        rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % (order_no)}
+        url = request_list[system_choose][0] + rc_request_dict[request_choose][0]
+        data = rc_request_dict[request_choose][1]
+        headers = ''
+        url_type = 1
+        url_request(url, data, url_type, headers)
+    elif request_choose in list(rc_request_dict.keys())[1:2]:
+        """设备信息"""
+        url = request_list[system_choose][1] + rc_request_dict[request_choose][0]
+        data = json.dumps(ast.literal_eval(data_request))
+        headers = ''
+        url_type = 1
+        url_request(url, data, url_type, headers)
+    elif request_choose in list(rc_request_dict.keys())[2:5]:
+        """moneta放款还款"""
         url = rc_request_dict[request_choose][0]
         data = data_request
-        try:
-            result = requests.post(url, data)
-            print(url, data, result)
-            html = result.text
-            show_lb['text'] = html
-        except:
-            show_lb['text'] = '请求接口失败'
+        headers = ''
+        url_type = 1
+        url_request(url, data, url_type, headers)
+    elif request_choose in list(rc_request_dict.keys())[7:9]:
+        """风控返回数据AES加密"""
+        url = rc_request_dict[request_choose][0]
+        data = ast.literal_eval(data_request)
+        url_type = 2
+        headers = ''
+        url_request(url, data, url_type, headers)
+    elif request_choose in list(rc_request_dict.keys())[5:7]:
+        """instamoney还款"""
+        url = rc_request_dict[request_choose][0]
+        data = data_request
+        auth = str(base64.b64encode(
+            f"{rc_request_dict[request_choose][2]}:{rc_request_dict[request_choose][3]}".encode('utf-8')), 'utf-8')
+        headers = {
+            "Content-Type": "application/json",
+            'Authorization': f'Basic {auth}',
+        }
+        url_type = 3
+        url_request(url, data, url_type, headers)
+    elif request_choose in list(rc_request_dict.keys())[9:11]:
+        """模拟风控回调"""
+        url = request_list[system_choose][0] + rc_request_dict[request_choose][0]
+        data = json.dumps(ast.literal_eval(data_request))
+        headers = ''
+        url_type = 1
+        url_request(url, data, url_type, headers)
+    else:
+        show_lb['text'] = '请求接口失败'
 
 
 def check_oppo_order(order_no, system_choose):
