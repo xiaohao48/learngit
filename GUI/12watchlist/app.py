@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 
 app = Flask(__name__)
 
@@ -21,6 +21,12 @@ movies = [
 def index():
     # return '<h1>Hello Totoro!</h1><img src="http://helloflask.com/totoro.gif">'
     return render_template('index.html', name=name, movies=movies)
+
+
+@app.route('/test')
+def test_url_for():
+    print(url_for('test_url_for',num=2))
+    return 'Test page'
 
 
 if __name__ == '__main__':
