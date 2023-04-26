@@ -61,7 +61,7 @@ class Movie(db.Model):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        if not current_user.is_authebticated:
+        if not current_user.is_authenticated:
             return redirect(url_for('index'))
         title = request.form.get('title')
         year = request.form.get('year')
