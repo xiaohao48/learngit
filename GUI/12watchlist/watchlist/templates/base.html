@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
     <title>{{user.name}}'s Watchlist</title>
-    <link rel="icon" href="{{url_for('static',filename='/images/favicon.ico')}}">
-    <link rel="stylesheet" href="{{url_for('static',filename='/CSS/style.css')}}" type="text/css">
+    <link rel="icon" href="{{ url_for('static',filename='images/favicon.ico') }}">
+    <link rel="stylesheet" href="{{url_for('static',filename='CSS/style.css')}}" type="text/css">
     {% endblock %}
 </head>
 <body>
@@ -16,7 +16,7 @@
 {% endfor %}
 
 <h2>
-    <img src="{{url_for('static',filename='/images/avatar.png')}}" alt="Avatar" class="avatar">
+    <img src="{{url_for('static',filename='images/avatar.png')}}" alt="Avatar" class="avatar">
     {{user.name}}'s Watchlist
 </h2>
 <nav>
