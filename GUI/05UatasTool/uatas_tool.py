@@ -6,9 +6,9 @@ import pymysql
 from sshtunnel import SSHTunnelForwarder
 import paramiko
 import pyperclip
-import sys
+# import sys
 import time
-from requests.auth import HTTPBasicAuth
+# from requests.auth import HTTPBasicAuth
 import base64
 
 risk_loan_level = ['LEVEL_ONE', 'LEVEL_TWO', 'LEVEL_THREE']
@@ -137,9 +137,9 @@ rc_request_dict = {
 }
 # 数据库账号密码
 db_mysql = {
-    "uatas": ["149.129.214.137", "uatas", "c8CMsFW7pHmpjRss"],
-    "uatasfly": ["159.138.99.17", "test-uatas_xiaohao", "NegYtW1rljEv"],
-    "finplus": ["149.129.255.222", "root", "3c07bcf6a961c032"],
+    "uatas": ["119.8.114.69", "uatas", "c8CMsFW7pHmpjRss", 9702],
+    "uatasfly": ["159.138.99.17", "test-uatas_xiaohao", "NegYtW1rljEv", 3306],
+    "finplus": ["149.129.255.222", "root", "3c07bcf6a961c032", 3306],
 }
 
 
@@ -269,15 +269,25 @@ def ssh_sever_end():
 def mysql_connect(system_choose):
     """数据库连接"""
     global db
-    ssh_sever_start(system_choose)
-    db = pymysql.connect(
-        host='127.0.0.1',
-        port=ssh_sever.local_bind_port,
-        user=db_mysql[system_choose][1],
-        password=db_mysql[system_choose][2],
-        db='cash_order',
-        charset='utf8'
-    )
+    try:
+        ssh_sever_start(system_choose)
+        db = pymysql.connect(
+            host='127.0.0.1',
+            port=ssh_sever.local_bind_port,
+            user=db_mysql[system_choose][1],
+            password=db_mysql[system_choose][2],
+            db='cash_order',
+            charset='utf8'
+        )
+    except:
+        db = pymysql.connect(
+            host=db_mysql[system_choose][0],
+            port=db_mysql[system_choose][3],
+            user=db_mysql[system_choose][1],
+            password=db_mysql[system_choose][2],
+            db='cash_order',
+            charset='utf8'
+        )
     return db
 
 
@@ -338,7 +348,7 @@ def order_change_reloan(order_no, system_choose):
         sqls = [
             f'UPDATE cash_order.orders as o SET o.`status`=85 WHERE o.order_no={order_no};',
             f'UPDATE cash_core.loan as l SET l.`status`=3 WHERE l.order_No={order_no};',
-            f'UPDATE cash_core.pay_record_log as g SET g.order_status=3 WHERE g.loan_id in '
+            f'UPDATE cash_core.pay_record_log as g SET g.order_status=3,g.msg="Invalid Destination" WHERE g.loan_id in '
             f'(SELECT l.id FROM cash_core.loan as l WHERE l.order_No={order_no});',
             f'UPDATE cash_pay.timepay_loan_order as p SET p.`status`=3 WHERE p.loan_no ={order_no};'
         ]
