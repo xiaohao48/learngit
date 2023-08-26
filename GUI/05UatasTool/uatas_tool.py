@@ -267,7 +267,7 @@ def ssh_sever_start(system_choose):
         (ssh['url'], ssh['port']),
         ssh_password=ssh['pwd'],
         ssh_username=ssh['name'],
-        remote_bind_address=(db_mysql[system_choose][0], 3306)
+        remote_bind_address=(db_mysql[system_choose][0], db_mysql[system_choose][3])
     )
     print(type(ssh_sever))
     ssh_sever.start()
@@ -285,6 +285,7 @@ def mysql_connect(system_choose):
     try:
         ssh_sever_start(system_choose)
         print("debug")
+        print(ssh_sever.local_bind_port)
         dbs = pymysql.connect(
             host='127.0.0.1',
             port=ssh_sever.local_bind_port,
