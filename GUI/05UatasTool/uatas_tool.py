@@ -3,16 +3,17 @@ import tkinter as tk
 import requests
 import json
 import pymysql
+import sshtunnel
 from sshtunnel import SSHTunnelForwarder
-import paramiko
+# import paramiko
 import pyperclip
 # import sys
-import time
+# import time
 # from requests.auth import HTTPBasicAuth
 import base64
 
 risk_loan_level = ['LEVEL_ONE', 'LEVEL_TWO', 'LEVEL_THREE']
-user_level = ['L-0', 'L-1']
+user_level_list = ['L-0', 'L-1']
 system = ['uatas', 'finplus', 'uatasfly']
 url_crypt = 'https://tool.lmeee.com/jiami/crypt128inter'
 # 代理
@@ -60,7 +61,7 @@ encrypt_dict = {
 # post请求列表
 request_list = {
     "uatas": ["http://test-rc.uatas.id", "http://test-api.uatas.id"],
-    "uatasfly": ["https://test-rc.modalandalan.site", "http://test-api.modalandalan.site"],
+    "uatasfly": ["http://test-rc.modalandalan.site", "http://test-api.modalandalan.site"],
     "finplus": ["http://test-rc.finplusid.com", "http://test-api.finplusid.com"],
 }
 rc_request_dict = {
@@ -142,8 +143,19 @@ db_mysql = {
     "finplus": ["149.129.255.222", "root", "3c07bcf6a961c032", 3306],
 }
 
+ssh = {
+    "url": "vps-proxy.toolscash.top",
+    "port": 22202,
+    "name": "firestormv9g",
+    "pwd": "zG4JbCY9O"
+}
+ssh_sever = sshtunnel.SSHTunnelForwarder
 
-def data_encrypt(system_choose, data_crypt):
+
+# dbs = []
+
+
+def data_encrypts(system_choose, data_crypt):
     """业务加解密功能"""
     if system_choose in encrypt_dict.keys():
         data = aes_encrypt(
@@ -177,7 +189,7 @@ def aes_encrypt(url, password, iv, way, text):
         encrypt_date = json.loads(html)['d']['r']
         show_lb['text'] = encrypt_date
         return encrypt_date
-    except:
+    finally:
         show_lb['text'] = f'加解密失败'
 
 
@@ -209,7 +221,7 @@ def mock_cloudun_callback(order_no, system_choose, loan_level, user_level):
             result = requests.post(url, data, proxies=proxies)
             html = result.text
             show_lb['text'] = f'{html} {order_no}回调成功'
-        except:
+        finally:
             show_lb['text'] = f'{order_no}模拟cloudun风控回调失败'
     else:
         show_lb['text'] = '请输入订单号'
@@ -219,8 +231,8 @@ def modify_order_ctime(order_no, system_choose):
     """修改订单创建时间"""
     if len(order_no) == 15:
         db = mysql_connect(system_choose)
-        sql = f'UPDATE cash_order.orders as o SET o.create_time=FROM_UNIXTIME(UNIX_TIMESTAMP(o.create_time)-3600) ' \
-              f'WHERE o.order_no={order_no};'
+        sql = f'''UPDATE cash_order.orders as o SET o.create_time=FROM_UNIXTIME(UNIX_TIMESTAMP(o.create_time)-3600) 
+              WHERE o.order_no={order_no};'''
         mysql_modify(db, sql, order_no)
         ssh_sever_end()
     else:
@@ -242,7 +254,7 @@ def control_request(order_no):
             result = requests.post(url, data)
             html = result.text
             show_lb['text'] = html
-        except:
+        finally:
             show_lb['text'] = f'{order_no}请求风控失败'
     else:
         show_lb['text'] = '请输入订单号'
@@ -252,26 +264,28 @@ def ssh_sever_start(system_choose):
     """跳板服务开启"""
     global ssh_sever
     ssh_sever = SSHTunnelForwarder(
-        ('jump-sz3.toolscash.top', 22202),
-        ssh_password='jqeVwuIdoc27bkcg',
-        ssh_username='xiaohao',
+        (ssh['url'], ssh['port']),
+        ssh_password=ssh['pwd'],
+        ssh_username=ssh['name'],
         remote_bind_address=(db_mysql[system_choose][0], 3306)
     )
+    print(type(ssh_sever))
     ssh_sever.start()
 
 
 def ssh_sever_end():
     """跳板服务关闭"""
-    db.close()
+    dbs.close()
     ssh_sever.close()
 
 
 def mysql_connect(system_choose):
     """数据库连接"""
-    global db
+    global dbs
     try:
         ssh_sever_start(system_choose)
-        db = pymysql.connect(
+        print("debug")
+        dbs = pymysql.connect(
             host='127.0.0.1',
             port=ssh_sever.local_bind_port,
             user=db_mysql[system_choose][1],
@@ -279,8 +293,10 @@ def mysql_connect(system_choose):
             db='cash_order',
             charset='utf8'
         )
-    except:
-        db = pymysql.connect(
+        print(type(dbs))
+    finally:
+        print("debug++")
+        dbs = pymysql.connect(
             host=db_mysql[system_choose][0],
             port=db_mysql[system_choose][3],
             user=db_mysql[system_choose][1],
@@ -288,7 +304,7 @@ def mysql_connect(system_choose):
             db='cash_order',
             charset='utf8'
         )
-    return db
+    return dbs
 
 
 def mysql_select(db, sql, order_no):
@@ -299,7 +315,7 @@ def mysql_select(db, sql, order_no):
         result = cursor.fetchall()
         show_lb['text'] = result
         return result
-    except:
+    finally:
         show_lb['text'] = f'{order_no}查询错误'
 
 
@@ -310,7 +326,7 @@ def mysql_modify(db, sql, order_no):
         cursor.execute(sql)
         db.commit()
         show_lb['text'] = f'{order_no}修改成功'
-    except:
+    finally:
         db.rollback()
         show_lb['text'] = f'{order_no}修改失败'
 
@@ -401,39 +417,39 @@ def order_overdue_sql2(order_no, system_choose, overdue_days):
         show_lb['text'] = '请输入订单号'
 
 
-def order_overdue_ssh():
-    """脚本执行"""
-    connection = paramiko.SSHClient()
-    connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+# def order_overdue_ssh():
+#     """脚本执行"""
+#     connection = paramiko.SSHClient()
+#     connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#
+#     connection.connect(hostname='jump-sz1.toolscash.top', port=22203, username='xiaohao', password='N2RjMmVjZTVhNDFi')
+#     channel = connection.invoke_shell()
+#     channel.settimeout(10)
+#     channel.send(1 + '\n')
+#     time.sleep(3)
 
-    connection.connect(hostname='jump-sz1.toolscash.top', port=22203, username='xiaohao', password='N2RjMmVjZTVhNDFi')
-    channel = connection.invoke_shell()
-    channel.settimeout(10)
-    channel.send(1 + '\n')
-    time.sleep(3)
+# command = '1'
+# stdin, stdout, stderr = connection.exec_command(command)
+# command = '11'
+# stdin, stdout, stderr = connection.exec_command(command)
+# command = 'df -h'
+# stdin, stdout, stderr = connection.exec_command(command)
 
-    # command = '1'
-    # stdin, stdout, stderr = connection.exec_command(command)
-    # command = '11'
-    # stdin, stdout, stderr = connection.exec_command(command)
-    # command = 'df -h'
-    # stdin, stdout, stderr = connection.exec_command(command)
+# loginInfo = channel.recv(1024).decode('utf-8')
+# command = 'df -h'
+# stdin, stdout, stderr = connection.exec_command(command)
+# channel.close()
+# connection.close()
 
-    # loginInfo = channel.recv(1024).decode('utf-8')
-    # command = 'df -h'
-    # stdin, stdout, stderr = connection.exec_command(command)
-    channel.close()
-    connection.close()
-
-    # trans = paramiko.Transport(('jump-sz1.toolscash.top', 22203))
-    # # trans.start_client()
-    # trans.auth_password(username='xiaohao', password='rOub8bWwc3mxhpjj')
-    # channel = trans.open_session(11)
-    # channel.get_pty()
-    # a = channel.invoke_shell()
-    #
-    # channel.close()
-    # trans.close()
+# trans = paramiko.Transport(('jump-sz1.toolscash.top', 22203))
+# # trans.start_client()
+# trans.auth_password(username='xiaohao', password='rOub8bWwc3mxhpjj')
+# channel = trans.open_session(11)
+# channel.get_pty()
+# a = channel.invoke_shell()
+#
+# channel.close()
+# trans.close()
 
 
 def clear_data(order_no, data_encrypt):
@@ -480,7 +496,7 @@ def url_request(url, data, url_type, headers):
             result = requests.post(url, data)
             html = result.text
             show_lb['text'] = html
-        except:
+        finally:
             show_lb['text'] = '请求接口失败'
     elif url_type == 2:
         try:
@@ -488,14 +504,14 @@ def url_request(url, data, url_type, headers):
             html = result.text
             encrypt_date = json.loads(html)['d']['r']
             show_lb['text'] = encrypt_date
-        except:
+        finally:
             show_lb['text'] = '请求接口失败'
     elif url_type == 3:
         try:
             result = requests.post(url, data, headers=headers, proxies=proxies)
             html = result.text
             show_lb['text'] = html
-        except:
+        finally:
             show_lb['text'] = '请求接口失败'
     else:
         show_lb['text'] = '请求接口失败'
@@ -506,7 +522,7 @@ def request_interface(request_choose, order_no, data_request, system_choose):
     if request_choose in list(rc_request_dict.keys())[0:1] and len(order_no) == 15:
         """请求风控"""
         modify_order_ctime(order_no, system_choose)
-        rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % (order_no)}
+        rc_request_dict[request_choose][1] = {'data': '{"order_no": "%s" }' % order_no}
         url = request_list[system_choose][0] + rc_request_dict[request_choose][0]
         data = rc_request_dict[request_choose][1]
         headers = ''
@@ -584,144 +600,144 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('900x600')
     root.title('uatas tool')
-    column = 0
+    columns = 0
 
     """第一行，参数行"""
-    row = 0
+    rows = 0
     # 订单号标签
     order_no_label = tk.Label(root, text='order_no')
-    order_no_label.grid(row=row, column=column + 1, sticky='ew')
+    order_no_label.grid(row=rows, column=columns + 1, sticky='ew')
     # 输入订单号
     order_no_var = tk.StringVar()
-    order_no_entry = tk.Entry(root, text=order_no_var)
-    order_no_entry.grid(row=row, column=column + 2, sticky='ew')
+    order_no_entry = tk.Entry(root, textvariable=order_no_var)
+    order_no_entry.grid(row=rows, column=columns + 2, sticky='ew')
     # 系统选择
     system_var = tk.StringVar(value='uatas')
     system_op = tk.OptionMenu(root, system_var, *system)
-    system_op.grid(row=row, column=column + 3, sticky='ew')
+    system_op.grid(row=rows, column=columns + 3, sticky='ew')
 
     """第二行，风控加解密"""
-    row = row + 1
+    rows = rows + 1
     # risk_loan_level选择
     risk_loan_level_var = tk.StringVar(value='LEVEL_ONE')
     risk_loan_level_op = tk.OptionMenu(root, risk_loan_level_var, *risk_loan_level)
-    risk_loan_level_op.grid(row=row, column=column + 1, sticky='ew')
+    risk_loan_level_op.grid(row=rows, column=columns + 1, sticky='ew')
     # user_level选择
     user_level_var = tk.StringVar(value='L-0')
-    user_level_op = tk.OptionMenu(root, user_level_var, *user_level)
-    user_level_op.grid(row=row, column=column + 2, sticky='ew')
+    user_level_op = tk.OptionMenu(root, user_level_var, *user_level_list)
+    user_level_op.grid(row=rows, column=columns + 2, sticky='ew')
     # # 请求风控
     # control_request_bt = create_button(root, text='请求风控', command=control_request, row=row, column=column + 3)
     # 风控AES加密
     aes_encrypt_bt = create_button(root, text='风控AES加密',
                                    command=lambda: aes_rc(order_no_var.get(), system_var.get(),
                                                           risk_loan_level_var.get(), user_level_var.get()),
-                                   row=row, column=column + 3)
+                                   row=rows, column=columns + 3)
     # 模拟cloudun回调
     control_callback_bt = create_button(root, text='模拟cloudun回调',
                                         command=lambda: mock_cloudun_callback(order_no_var.get(), system_var.get(),
                                                                               risk_loan_level_var.get(),
                                                                               user_level_var.get()),
-                                        row=row, column=column + 4)
+                                        row=rows, column=columns + 4)
 
     """第三行，数据库查询修改"""
-    row = row + 1
+    rows = rows + 1
     # 订单信息查询
     select_order_bt = create_button(root, text='订单信息查询',
-                                    command=lambda: select_order(order_no_var.get(), system_var.get()), row=row,
-                                    column=column + 1)
+                                    command=lambda: select_order(order_no_var.get(), system_var.get()), row=rows,
+                                    column=columns + 1)
     # 订单状态改为过机审
     machine_status_bt = create_button(root, text='订单过机审',
                                       command=lambda: modify_machine_status(order_no_var.get(), system_var.get()),
-                                      row=row, column=column + 2)
+                                      row=rows, column=columns + 2)
     # 订单改为待重新放款
-    reloan_bt = create_button(root, text='订单待重新放款',
-                              command=lambda: order_change_reloan(order_no_var.get(), system_var.get()), row=row,
-                              column=column + 3)
+    reLoan_bt = create_button(root, text='订单待重新放款',
+                              command=lambda: order_change_reloan(order_no_var.get(), system_var.get()), row=rows,
+                              column=columns + 3)
 
     """修改订单到期日"""
-    row = row + 1
+    rows = rows + 1
     # 逾期天数输入label
-    modify_duedays_lb = tk.Label(root, text='到期日向前/向后移动()天')
-    modify_duedays_lb.grid(row=row, column=column + 1)
+    modify_dueDays_lb = tk.Label(root, text='到期日向前/向后移动()天')
+    modify_dueDays_lb.grid(row=rows, column=columns + 1)
     # 逾期天数输入entry
     overduedays_var = tk.StringVar()
-    overdueday_entry = tk.Entry(root, text=overduedays_var)
-    overdueday_entry.grid(row=row, column=column + 2, sticky='ew')
+    overdueday_entry = tk.Entry(root, textvariable=overduedays_var)
+    overdueday_entry.grid(row=rows, column=columns + 2, sticky='ew')
     # 订单逾期
     order_overdue_bt = create_button(root, text='向前修改到期日(逾期)',
                                      command=lambda: order_overdue_sql1(order_no_var.get(), system_var.get(),
-                                                                        overduedays_var.get()), row=row,
-                                     column=column + 3)
+                                                                        overduedays_var.get()), row=rows,
+                                     column=columns + 3)
     # 订单延期
-    order_overdue_bt = create_button(root, text='向后修改到期日',
+    order_add_due_bt = create_button(root, text='向后修改到期日',
                                      command=lambda: order_overdue_sql2(order_no_var.get(), system_var.get(),
-                                                                        overduedays_var.get()), row=row,
-                                     column=column + 4)
+                                                                        overduedays_var.get()), row=rows,
+                                     column=columns + 4)
 
     """oppo订单查看修改"""
-    row = row + 1
+    rows = rows + 1
     create_button(root, text='查看oppo订单信息',
-                  command=lambda: check_oppo_order(data_encrypt_text.get(1.0, tk.END), system_var.get()), row=row,
-                  column=column + 1)
+                  command=lambda: check_oppo_order(data_encrypt_text.get(1.0, tk.END), system_var.get()), row=rows,
+                  column=columns + 1)
     create_button(root, text='修改oppo订单创建时间',
-                  command=lambda: modify_oppo_order(data_encrypt_text.get(1.0, tk.END), system_var.get()), row=row,
-                  column=column + 2)
+                  command=lambda: modify_oppo_order(data_encrypt_text.get(1.0, tk.END), system_var.get()), row=rows,
+                  column=columns + 2)
 
     """加解密信息输入行"""
-    row = row + 1
+    rows = rows + 1
     data_encrypt_text = tk.Text(root, width=120, height=4)
-    data_encrypt_text.grid(row=row, column=column, columnspan=5)
+    data_encrypt_text.grid(row=rows, column=columns, columnspan=5)
 
     """加解密行"""
     # 加解密label
-    row = row + 1
+    rows = rows + 1
     encrypt_lb = tk.Label(root, text='待加解密数据↑')
-    encrypt_lb.grid(row=row, column=column + 1)
+    encrypt_lb.grid(row=rows, column=columns + 1)
     # 加密方式
     encrypt_var = tk.StringVar(value="uatas后端解密")
     encrypt_op = tk.OptionMenu(root, encrypt_var, *encrypt_dict.keys())
-    encrypt_op.grid(row=row, column=column + 2, sticky='ew')
+    encrypt_op.grid(row=rows, column=columns + 2, sticky='ew')
     # 前后端加解密
     encrypt_bt = create_button(root, text='加解密',
-                               command=lambda: data_encrypt(encrypt_var.get(), data_encrypt_text.get(1.0, tk.END)),
-                               row=row, column=column + 3)
+                               command=lambda: data_encrypts(encrypt_var.get(), data_encrypt_text.get(1.0, tk.END)),
+                               row=rows, column=columns + 3)
 
     """查看脚本"""
-    row = row + 1
+    rows = rows + 1
     # 脚本选择
     script_var = tk.StringVar(value='选择脚本')
     script_op = tk.OptionMenu(root, script_var, *scripts.keys())
-    script_op.grid(row=row, column=column + 1, sticky='ew')
+    script_op.grid(row=rows, column=columns + 1, sticky='ew')
     # 查看脚本
-    script_bt = create_button(master=root, text='查看脚本', row=row, column=column + 2,
+    script_bt = create_button(master=root, text='查看脚本', row=rows, column=columns + 2,
                               command=lambda: script(script_var.get(), order_no_var.get()))
     # 复制按钮
-    copy_bt = create_button(root, text='复制', command=copy, row=row, column=column + 3)
+    copy_bt = create_button(root, text='复制', command=copy, row=rows, column=columns + 3)
     # 清空按钮
-    clear_bt = create_button(root, text='清空', command=lambda: clear_data(order_no_var, data_encrypt_text), row=row,
-                             column=column + 4)
+    clear_bt = create_button(root, text='清空', command=lambda: clear_data(order_no_var, data_encrypt_text), row=rows,
+                             column=columns + 4)
 
     """模拟请求"""
-    row += 1
+    rows += 1
     # 请求选择
     req_op_var = tk.StringVar(value="请求风控")
     req_op = tk.OptionMenu(root, req_op_var, *rc_request_dict.keys())
-    req_op.grid(row=row, column=column + 1, sticky='ew')
+    req_op.grid(row=rows, column=columns + 1, sticky='ew')
     # 查看请求参数
     check_bt = create_button(root, text='查看请求参数',
-                             command=lambda: view_request_parameters(req_op_var, data_encrypt_text), row=row,
-                             column=column + 2)
+                             command=lambda: view_request_parameters(req_op_var, data_encrypt_text), row=rows,
+                             column=columns + 2)
     # 请求接口
     request_interface_bt = create_button(root, text='请求接口',
                                          command=lambda: request_interface(req_op_var.get(), order_no_var.get(),
                                                                            data_encrypt_text.get(1.0, tk.END),
                                                                            system_var.get()),
-                                         row=row, column=column + 3)
+                                         row=rows, column=columns + 3)
 
     """展示行"""
-    row = row + 1
+    rows = rows + 1
     show_lb = tk.Label(root, text='show', wraplength=800, background='green')
-    show_lb.grid(row=row, column=column + 1, columnspan=5, sticky='ew')
+    show_lb.grid(row=rows, column=columns + 1, columnspan=5, sticky='ew')
 
     root.mainloop()
