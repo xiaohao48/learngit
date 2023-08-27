@@ -91,11 +91,11 @@ rc_request_dict = {
     # "正式finplus设备信息": ["http://api.finplus.id/api/thirdapi/getdeviceinfo",
     #                   '{"order_no":276688745040269,"sign":"7afb01aeb248529dc2d0816bbfe68adb","timestamp":1660132508,"type":2}'],
     "moneypay放款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
-                     '{"order_type":"loan","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
+                   '{"order_type":"loan","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
     "moneypay还款": ["http://sandbox-pay.moneypaynow.com/sand-box/notify",
-                     '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
+                   '{"order_type":"repay","order_no":"22072313395637251675","order_status":1,"e_msg":""}'],
     "monetapay还款": ["http://sandbox-api.monetapay.net/simulation/payForVa",
-                      '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'],
+                    '{"mch_id":100018,"order_no":22072313284035627786,"amount":1095000}'],
     "instamoney bank还款": [
         'https://api.instamoney.co/p2p-escrow-virtual-accounts/testing-payments',
         '{"external_id": "846ba2bc_03c6331a434acd5b","amount": "1683490.00"}',
@@ -150,9 +150,7 @@ ssh = {
     "pwd": "zG4JbCY9O"
 }
 ssh_sever = sshtunnel.SSHTunnelForwarder
-
-
-# dbs = []
+dbs = pymysql.connections.Connection
 
 
 def data_encrypts(system_choose, data_crypt):
@@ -189,7 +187,7 @@ def aes_encrypt(url, password, iv, way, text):
         encrypt_date = json.loads(html)['d']['r']
         show_lb['text'] = encrypt_date
         return encrypt_date
-    finally:
+    except:
         show_lb['text'] = f'加解密失败'
 
 
@@ -221,7 +219,7 @@ def mock_cloudun_callback(order_no, system_choose, loan_level, user_level):
             result = requests.post(url, data, proxies=proxies)
             html = result.text
             show_lb['text'] = f'{html} {order_no}回调成功'
-        finally:
+        except:
             show_lb['text'] = f'{order_no}模拟cloudun风控回调失败'
     else:
         show_lb['text'] = '请输入订单号'
@@ -254,7 +252,7 @@ def control_request(order_no):
             result = requests.post(url, data)
             html = result.text
             show_lb['text'] = html
-        finally:
+        except:
             show_lb['text'] = f'{order_no}请求风控失败'
     else:
         show_lb['text'] = '请输入订单号'
@@ -295,7 +293,8 @@ def mysql_connect(system_choose):
             charset='utf8'
         )
         print(type(dbs))
-    finally:
+        print("链接成功")
+    except:
         print("debug++")
         dbs = pymysql.connect(
             host=db_mysql[system_choose][0],
@@ -305,6 +304,7 @@ def mysql_connect(system_choose):
             db='cash_order',
             charset='utf8'
         )
+        print("链接成功+")
     return dbs
 
 
@@ -316,7 +316,7 @@ def mysql_select(db, sql, order_no):
         result = cursor.fetchall()
         show_lb['text'] = result
         return result
-    finally:
+    except:
         show_lb['text'] = f'{order_no}查询错误'
 
 
@@ -327,7 +327,7 @@ def mysql_modify(db, sql, order_no):
         cursor.execute(sql)
         db.commit()
         show_lb['text'] = f'{order_no}修改成功'
-    finally:
+    except:
         db.rollback()
         show_lb['text'] = f'{order_no}修改失败'
 
@@ -475,7 +475,7 @@ def create_button(master, text, command, row, column, width=30, sticky='ew'):
 def script(script_select, order_no):
     """查看脚本"""
     scripts['uatas还款拉取'] = f"php /home/rong/www/time-pay/webroot/batch.php TimePayRepay PollingRepayResult " \
-                               f"--orderNo='{order_no}' --payHandel='UP'"
+                           f"--orderNo='{order_no}' --payHandel='UP'"
     scripts["用户storage目录查询"] = f'php -r "echo crc32({order_no}) % 10;"'
     if script_select in scripts.keys():
         show_lb['text'] = scripts[script_select]
@@ -497,7 +497,7 @@ def url_request(url, data, url_type, headers):
             result = requests.post(url, data)
             html = result.text
             show_lb['text'] = html
-        finally:
+        except:
             show_lb['text'] = '请求接口失败'
     elif url_type == 2:
         try:
@@ -505,14 +505,14 @@ def url_request(url, data, url_type, headers):
             html = result.text
             encrypt_date = json.loads(html)['d']['r']
             show_lb['text'] = encrypt_date
-        finally:
+        except:
             show_lb['text'] = '请求接口失败'
     elif url_type == 3:
         try:
             result = requests.post(url, data, headers=headers, proxies=proxies)
             html = result.text
             show_lb['text'] = html
-        finally:
+        except:
             show_lb['text'] = '请求接口失败'
     else:
         show_lb['text'] = '请求接口失败'
