@@ -267,7 +267,6 @@ def ssh_sever_start(system_choose):
         ssh_username=ssh['name'],
         remote_bind_address=(db_mysql[system_choose][0], db_mysql[system_choose][3])
     )
-    print(type(ssh_sever))
     ssh_sever.start()
 
 
@@ -282,8 +281,6 @@ def mysql_connect(system_choose):
     global dbs
     try:
         ssh_sever_start(system_choose)
-        print("debug")
-        print(ssh_sever.local_bind_port)
         dbs = pymysql.connect(
             host='127.0.0.1',
             port=ssh_sever.local_bind_port,
@@ -292,10 +289,7 @@ def mysql_connect(system_choose):
             db='cash_order',
             charset='utf8'
         )
-        print(type(dbs))
-        print("链接成功")
     except:
-        print("debug++")
         dbs = pymysql.connect(
             host=db_mysql[system_choose][0],
             port=db_mysql[system_choose][3],
@@ -304,7 +298,6 @@ def mysql_connect(system_choose):
             db='cash_order',
             charset='utf8'
         )
-        print("链接成功+")
     return dbs
 
 
